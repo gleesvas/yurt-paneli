@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYK Yurt Yönetim Paneli</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <div id="silent-hour-alert" class="alert-banner">
+            <span id="silent-text">Yurt Saat Durumu Yükleniyor...</span>
+        </div>
+
+        <h1 class="main-title">KYK Yurt Dijital Panel</h1>
+
+        <div class="dashboard-grid">
+            
+            <div class="card info-card">
+                <h2><i class="fa-solid fa-utensils"></i> Günün Yemek Menüsü</h2>
+                <div class="food-menu">
+                    <p><strong>Akşam Yemeği:</strong> Mercimek Çorbası, Orman Kebabı, Pirinç Pilavı, Triliçe</p>
+                    <div class="rating-box">
+                        <span>Menüyü Puanla:</span>
+                        <div class="stars">
+                            <i class="fa-regular fa-star" data-value="1"></i>
+                            <i class="fa-regular fa-star" data-value="2"></i>
+                            <i class="fa-regular fa-star" data-value="3"></i>
+                            <i class="fa-regular fa-star" data-value="4"></i>
+                            <i class="fa-regular fa-star" data-value="5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card repair-card">
+                <h2><i class="fa-solid fa-wrench"></i> Arıza Bildirim Sistemi</h2>
+                <div class="repair-form">
+                    <input type="text" id="repair-room" placeholder="Oda Numarası (Örn: 204)">
+                    <select id="repair-category">
+                        <option value="Elektrik">Elektrik</option>
+                        <option value="Tesisat/Su">Tesisat / Su</option>
+                        <option value="Mobilya">Mobilya</option>
+                        <option value="İnternet">İnternet</option>
+                    </select>
+                    <textarea id="repair-desc" placeholder="Arıza detayını kısaca açıklayınız..."></textarea>
+                    <button id="btn-repair-submit" onclick="submitRepairReport()">Arıza Bildir</button>
+                </div>
+                <ul id="repair-list" class="repair-list">
+                </ul>
+            </div>
+
+            <div class="card laundry-card">
+                <h2><i class="fa-solid fa-shirt"></i> Akıllı Çamaşır Sıra Sistemi</h2>
+                <div class="laundry-form">
+                    <input type="text" id="laundry-name" placeholder="Adınız Soyadınız">
+                    <select id="machine-select">
+                        <option value="Çamaşır Makinesi 1">Çamaşır Makinesi 1</option>
+                        <option value="Çamaşır Makinesi 2">Çamaşır Makinesi 2</option>
+                        <option value="Çamaşır Makinesi 3">Çamaşır Makinesi 3</option>
+                    </select>
+                    <input type="time" id="laundry-time"> 
+                    <button id="btn-laundry-reserve" onclick="takeLaundryRow()">Sıra Al</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="laundry-table">
+                        <thead>
+                            <tr>
+                                <th>Öğrenci</th>
+                                <th>Makine</th>
+                                <th>Rezervasyon Saati</th>
+                                <th>Durum</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="laundry-rows">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
