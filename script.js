@@ -85,7 +85,7 @@ function setupKickListener() {
                     });
                 });
 
-                alert("Sistem yöneticisi sizi attı");
+                alert("sg pic");
                 window.location.reload();
             }
         }
@@ -205,7 +205,7 @@ function renderRepairs() {
             `;
         }
 
-        // ARIZA PANELİ KICK BUTONU (Kritik Kontroller Tamamen Esnetildi)
+        // ARIZA PANELİ KICK BUTONU
         let kickButtonHtml = "";
         const targetUser = repair.createdBy || "Bilinmiyor";
         if (isAdmin && targetUser !== "Sistem Yöneticisi" && targetUser !== "Bilinmiyor") {
@@ -347,17 +347,18 @@ function renderLaundry() {
             `;
         }
 
+        // ÇAMAŞIR PANELİ KICK BUTONU (KÜÇÜLTÜLDÜ VE AKSİYON KUTUSUNUN EN SAĞINA ALINDI)
         let kickButtonHtml = "";
         if (isAdmin && userName !== "Sistem Yöneticisi" && userName !== "Bilinmiyor") {
             kickButtonHtml = `
-                <button onclick="kickUserRemote('${userName}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-left: 6px; font-size: 11px;">
+                <button onclick="kickUserRemote('${userName}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
                     <i class="fa-solid fa-user-slash"></i> Kick
                 </button>
             `;
         }
 
         tr.innerHTML = `
-            <td>${userName} ${isOwner ? '<b style="color:#2ecc71;">(Sen)</b>' : ''} ${kickButtonHtml}</td>
+            <td>${userName} ${isOwner ? '<b style="color:#2ecc71;">(Sen)</b>' : ''}</td>
             <td>${item.machine}</td>
             <td>${item.time}</td>
             <td>${statusHtml}</td>
@@ -365,6 +366,7 @@ function renderLaundry() {
                 <div style="display: flex; gap: 8px; align-items: center;">
                     ${actionButtonHtml}
                     ${deleteButtonHtml}
+                    ${kickButtonHtml}
                 </div>
             </td>
         `;
