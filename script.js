@@ -25,19 +25,19 @@ document.addEventListener("DOMContentLoaded", () => {
     setupStars();
     loadRepairs();
     loadLaundry();
+    setupKickListener(); // Uzaktan kickleme dinleyicisini başlat
 
     // SADECE SAYI GİRİŞİNE İZİN VEREN KONTROL:
     const roomInput = document.getElementById("repair-room");
     if (roomInput) {
         roomInput.addEventListener("input", (e) => {
-            // Sayı dışındaki (0-9 arası olmayan) tüm karakterleri anında temizler
             e.target.value = e.target.value.replace(/[^0-9]/g, '');
         });
     }
 });
 
 /* ==========================================================================
-   KİMLİK KONTROL MODÜLÜ (Admin Destekli)
+   KİMLİK KONTROL VE UZAKTAN KICK MODÜLÜ
    ========================================================================== */
 function checkUserIdentity() {
     let savedUser = localStorage.getItem("yurt_user_name");
@@ -64,6 +64,40 @@ function checkUserIdentity() {
     if (nameInput) {
         nameInput.value = currentUser;
         nameInput.disabled = true; 
+    }
+}
+
+// Cihazın atılıp atılmadığını Firebase üzerinden anlık dinleyen fonksiyon
+function setupKickListener() {
+    database.ref('kickedUsers').on('value', (snapshot) => {
+        const kickedList = snapshot.val();
+        if (kickedList) {
+            const originalName = localStorage.getItem("yurt_user_name");
+            if (Object.values(kickedList).includes(originalName)) {
+                
+                // Cihazın hafızasını temizle
+                localStorage.removeItem("yurt_user_name");
+                
+                // Veritabanından bu kick kaydını temizle (Kullanıcı tekrar kayıt olabilsin diye)
+                database.ref('kickedUsers').orderByValue().equalTo(originalName).once('value', (snap) => {
+                    snap.forEach((childSnap) => {
+                        childSnap.ref.remove();
+                    });
+                });
+
+                // Kullanıcıyı uyar ve baştan başlasın diye sayfayı yenile
+                alert("Yönetici tarafından sistemden çıkarıldınız. Lütfen tekrar giriş yapın.");
+                window.location.reload();
+            }
+        }
+    });
+}
+
+// Adminlerin listedeki "Kick" butonuna basınca tetikleyeceği fonksiyon
+function kickUserRemote(targetName) {
+    if (confirm(`${targetName} isimli kullanıcıyı siteden atmak istediğinize emin misiniz?`)) {
+        const id = Date.now().toString();
+        database.ref('kickedUsers/' + id).set(targetName);
     }
 }
 
@@ -297,8 +331,18 @@ function renderLaundry() {
             `;
         }
 
+        // Sadece adminlerin göreceği minik turuncu Kick butonu
+        let kickButtonHtml = "";
+        if (isAdmin && item.name !== "Sistem Yöneticisi") {
+            kickButtonHtml = `
+                <button onclick="kickUserRemote('${item.name}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-left: 6px; font-size: 11px;">
+                    <i class="fa-solid fa-user-slash"></i> Kick
+                </button>
+            `;
+        }
+
         tr.innerHTML = `
-            <td>${item.name} ${isOwner ? '<b style="color:#2ecc71;">(Sen)</b>' : ''}</td>
+            <td>${item.name} ${isOwner ? '<b style="color:#2ecc71;">(Sen)</b>' : ''} ${kickButtonHtml}</td>
             <td>${item.machine}</td>
             <td>${item.time}</td>
             <td>${statusHtml}</td>
