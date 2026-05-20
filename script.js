@@ -192,21 +192,41 @@ function renderLaundry() {
             isButtonDisabled = true; 
         }
 
+        // Tablo satırına hem işlem butonunu hem de kırmızı çöp kutusu butonunu ekliyoruz
         tr.innerHTML = `
             <td>${item.name}</td>
             <td>${item.machine}</td>
             <td>${item.time}</td>
             <td>${statusHtml}</td>
             <td>
-                <button class="btn-done ${isButtonDisabled ? 'disabled' : ''}" 
-                        onclick="advanceLaundryStatus('${item.id}')" 
-                        ${isButtonDisabled ? 'disabled' : ''}>
-                    ${buttonText}
-                </button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn-done ${isButtonDisabled ? 'disabled' : ''}" 
+                            onclick="advanceLaundryStatus('${item.id}')" 
+                            ${isButtonDisabled ? 'disabled' : ''}>
+                        ${buttonText}
+                    </button>
+                    <button class="btn-delete" onclick="deleteLaundryRow('${item.id}')" title="Sırayı Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
             </td>
         `;
         laundryRows.appendChild(tr);
     });
+}
+
+// FİRREBASE'DEN SIRAYI TAMAMEN SİLEN YENİ FONKSİYON:
+function deleteLaundryRow(id) {
+    if (confirm("Bu çamaşır sırasını tamamen silmek istediğinize emin misiniz?")) {
+        // Firebase'deki o ID'ye ait veriyi tamamen kaldırır
+        database.ref('laundry/' + id).remove()
+            .then(() => {
+                console.log("Sıra başarıyla silindi.");
+            })
+            .catch((error) => {
+                alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
+            });
+    }
 }
 
 function advanceLaundryStatus(id) {
