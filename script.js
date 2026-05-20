@@ -101,6 +101,38 @@ function renderRepairs() {
             buttonHtml = ""; 
         }
 
+        // Arıza listesi elemanına hem durumu ilerletme butonunu hem de kırmızı çöp kutusu butonunu ekliyoruz
+        li.innerHTML = `
+            <div class="repair-info">
+                <strong>Oda ${repair.room} - ${repair.category}</strong>
+                <p>${repair.desc}</p>
+            </div>
+            <div class="repair-action" style="display: flex; gap: 8px; align-items: center;">
+                <span class="badge ${badgeClass}">${badgeText}</span>
+                ${buttonHtml}
+                <button class="btn-delete-repair" onclick="deleteRepairReport('${repair.id}')" title="Bildirimi Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        `;
+        repairList.appendChild(li);
+    });
+}
+
+// FİRREBASE'DEN ARIZA BİLDİRİMİNİ TAMAMEN SİLEN YENİ FONKSİYON:
+function deleteRepairReport(id) {
+    if (confirm("Bu arıza bildirimini tamamen silmek istediğinize emin misiniz?")) {
+        // Firebase'deki o ID'ye ait arıza kaydını temizler
+        database.ref('repairs/' + id).remove()
+            .then(() => {
+                console.log("Arıza bildirimi başarıyla silindi.");
+            })
+            .catch((error) => {
+                alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
+            });
+    }
+}
+
         li.innerHTML = `
             <div class="repair-info">
                 <strong>Oda ${repair.room} - ${repair.category}</strong>
