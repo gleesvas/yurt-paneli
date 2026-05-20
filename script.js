@@ -113,7 +113,7 @@ function loadRepairs() {
 }
 
 /* ==========================================================================
-   3. MODÜL: AKILLI ÇAMAŞIR REZERVASYON SİSTEMİ (İç Mantığı Güncellenmiş)
+   3. MODÜL: AKILLI ÇAMAŞIR REZERVASYON SİSTEMİ
    ========================================================================== */
 function takeLaundryRow() {
     const studentNameInput = document.getElementById("laundry-name");
@@ -129,13 +129,12 @@ function takeLaundryRow() {
         return;
     }
 
-    // GÜNCELLEME: Makine ne olursa olsun yeni kayıt her zaman ilk başta "waiting" (Bekliyor) olur.
     const newLaundry = {
         id: Date.now(),
         name: name,
         machine: machine,
         time: selectedTime,
-        status: "waiting" 
+        status: "waiting"
     };
 
     let laundryList = JSON.parse(localStorage.getItem("laundry")) || [];
@@ -164,7 +163,6 @@ function renderLaundry() {
             statusHtml = `<span class="status-badge waiting">Bekliyor</span>`;
             buttonText = "Yıkamayı Başlat"; 
             
-            // GÜNCELLEME: Makinede şu an "washing" (Yıkanıyor) durumunda biri varsa sonraki bekleyenlerin butonu kilitlenir.
             const isBusy = laundryList.some(l => l.machine === item.machine && l.status === "washing");
             if (isBusy) {
                 isButtonDisabled = true;
@@ -204,14 +202,12 @@ function advanceLaundryStatus(id) {
     if (itemIndex !== -1) {
         const item = laundryList[itemIndex];
 
-        // GÜNCELLEME: Bekliyor -> Yıkanıyor (Sadece butona basıldığında el ile tetiklenir)
         if (item.status === "waiting") {
             const isBusy = laundryList.some(l => l.machine === item.machine && l.status === "washing");
             if (!isBusy) {
                 item.status = "washing";
             }
         } 
-        // GÜNCELLEME: Yıkanıyor -> Alındı (Sıra otomatik olarak bir sonrakine geçmez, o 'Bekliyor' kalır)
         else if (item.status === "washing") {
             item.status = "done";
         }

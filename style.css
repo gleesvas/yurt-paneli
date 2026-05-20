@@ -9,22 +9,24 @@
 body {
     background-color: #f3f4f6;
     color: #1f2937;
-    padding: 20px;
+    padding: 10px; /* Mobilde kenarlardan taşmasın diye düşürüldü */
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
 }
 
 /* Üst Bilgilendirme Bannerı */
 .alert-banner {
-    padding: 15px;
+    padding: 12px;
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     font-weight: 600;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    font-size: 0.9rem; /* Mobilde yazı sığsın diye */
 }
 
 .alert-safe {
@@ -40,23 +42,32 @@ body {
 }
 
 .main-title {
-    margin-bottom: 25px;
-    font-size: 2rem;
+    margin-bottom: 20px;
+    font-size: 1.6rem; /* Mobilde daha kibar dursun */
     color: #111827;
     border-left: 5px solid #3b82f6;
     padding-left: 10px;
 }
 
-/* Grid Panel Yapısı */
+/* Grid Panel Yapısı (Mobil Öncelikli) */
 .dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
+/* Masaüstü Ekranlar İçin Düzenlemeler */
 @media (min-width: 768px) {
+    body {
+        padding: 20px;
+    }
+    .main-title {
+        font-size: 2rem;
+    }
     .dashboard-grid {
+        display: grid;
         grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
     }
     .laundry-card {
         grid-column: span 2;
@@ -67,9 +78,10 @@ body {
 .card {
     background: #ffffff;
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px; /* Mobilde iç boşluk optimize edildi */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
 }
 
 .card:hover {
@@ -78,7 +90,7 @@ body {
 }
 
 .card h2 {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     margin-bottom: 15px;
     color: #374151;
     display: flex;
@@ -108,7 +120,7 @@ button {
     transition: background-color 0.2s;
 }
 
-/* Modül Odaklı Form Focus ve Buton Renkleri */
+/* Form Focus Efektleri */
 .repair-form input:focus, .repair-form select:focus, .repair-form textarea:focus {
     border-color: #8b5cf6;
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
@@ -123,17 +135,17 @@ button {
     background-color: #7c3aed;
 }
 
+/* Çamaşır Formu (Esnek Mobil Yapı) */
 .laundry-form {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column; /* Mobilde alt alta */
     gap: 10px;
     margin-bottom: 20px;
 }
 
 .laundry-form input, .laundry-form select {
-    flex: 1;
-    min-width: 150px;
     margin-bottom: 0;
+    width: 100%;
 }
 
 .laundry-form input:focus, .laundry-form select:focus {
@@ -144,8 +156,19 @@ button {
 #btn-laundry-reserve {
     background-color: #10b981;
     color: white;
-    width: auto;
-    padding: 10px 20px;
+    width: 100%; /* Mobilde tam genişlik */
+    padding: 12px;
+}
+
+/* Büyük Ekranlarda Çamaşır Formunu Yana Yana Yap */
+@media (min-width: 768px) {
+    .laundry-form {
+        flex-direction: row; /* Yan yana */
+    }
+    #btn-laundry-reserve {
+        width: auto;
+        padding: 10px 20px;
+    }
 }
 
 #btn-laundry-reserve:hover {
@@ -163,6 +186,7 @@ button {
 .rating-box {
     margin-top: 15px;
     display: flex;
+    flex-wrap: wrap; /* Mobilde sığmazsa aşağı kaysın */
     align-items: center;
     gap: 10px;
 }
@@ -188,13 +212,21 @@ button {
 
 .repair-list li {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column; /* Mobilde alt alta bilgi/buton */
+    gap: 10px;
     padding: 12px;
     background: #f9fafb;
     border-radius: 6px;
     margin-bottom: 8px;
     border: 1px solid #e5e7eb;
+}
+
+@media (min-width: 480px) {
+    .repair-list li {
+        flex-direction: row; /* Küçük cihaz üstünde yan yana */
+        justify-content: space-between;
+        align-items: center;
+    }
 }
 
 .repair-info p {
@@ -205,13 +237,23 @@ button {
 
 .repair-action {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
     gap: 5px;
 }
 
+@media (min-width: 480px) {
+    .repair-action {
+        flex-direction: column;
+        align-items: flex-end;
+        width: auto;
+    }
+}
+
 .btn-next-status {
-    padding: 4px 8px;
+    padding: 6px 10px;
     font-size: 0.75rem;
     background-color: #e5e7eb;
     color: #374151;
@@ -235,23 +277,28 @@ button {
 .badge-process { background-color: #dbeafe; color: #2563eb; }
 .badge-solved { background-color: #d1fae5; color: #059669; }
 
-/* Tablo Stilleri ve Çamaşır Badge'leri */
+/* Tablo Taşma Koruması (Mobilde Kaydırılabilir Tablo) */
 .table-responsive {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
 }
 
 .laundry-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
-    font-size: 0.9rem;
+    font-size: 0.85rem; /* Mobilde daha okunaklı boyut */
+    min-width: 500px; /* Sıkışmayı önlemek için minimum genişlik kilidi */
 }
 
 .laundry-table th, .laundry-table td {
-    padding: 12px;
+    padding: 10px;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap; /* Metinlerin kırılıp çirkinleşmesini önler */
 }
 
 .laundry-table th {
@@ -261,36 +308,26 @@ button {
 }
 
 .status-badge {
-    padding: 6px 10px;
+    padding: 4px 8px;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     display: inline-block;
 }
 
-.status-badge.waiting {
-    background-color: #fef3c7;
-    color: #b45309;
-}
-
-.status-badge.washing {
-    background-color: #dbeafe;
-    color: #1d4ed8;
-}
-
-.status-badge.done {
-    background-color: #d1fae5;
-    color: #047857;
-}
+.status-badge.waiting { background-color: #fef3c7; color: #b45309; }
+.status-badge.washing { background-color: #dbeafe; color: #1d4ed8; }
+.status-badge.done { background-color: #d1fae5; color: #047857; }
 
 /* Dinamik İşlem Butonları */
 .btn-done {
-    padding: 6px 12px;
-    font-size: 0.8rem;
+    padding: 6px 10px;
+    font-size: 0.75rem;
     background-color: #3b82f6;
     color: white;
     border-radius: 4px;
     width: auto;
+    display: inline-block;
 }
 
 .btn-done:hover {
