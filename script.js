@@ -85,8 +85,7 @@ function setupKickListener() {
                     });
                 });
 
-                // İstediğin özel uyarı metni
-                alert("sg pic");
+                alert("Sistem yöneticisi sizi attı");
                 window.location.reload();
             }
         }
@@ -95,6 +94,10 @@ function setupKickListener() {
 
 // Adminlerin listedeki "Kick" butonuna basınca tetikleyeceği fonksiyon
 function kickUserRemote(targetName) {
+    if (!targetName || targetName === "Bilinmiyor" || targetName === "Sistem Yöneticisi") {
+        alert("Geçersiz veya boş bir kullanıcı adı kicklenemez!");
+        return;
+    }
     if (confirm(`${targetName} isimli kullanıcıyı siteden atmak istediğinize emin misiniz?`)) {
         const id = Date.now().toString();
         database.ref('kickedUsers/' + id).set(targetName);
@@ -152,7 +155,7 @@ function submitRepairReport() {
         category: category,
         desc: desc,
         status: "pending",
-        createdBy: currentUser
+        createdBy: currentUser || "Bilinmiyor"
     };
 
     database.ref('repairs/' + id).set(newRepair);
@@ -202,11 +205,12 @@ function renderRepairs() {
             `;
         }
 
-        // ARIZA PANELİNE EKLENEN ADMİNE ÖZEL KICK BUTONU
+        // ARIZA PANELİ KICK BUTONU (Kritik Kontroller Tamamen Esnetildi)
         let kickButtonHtml = "";
-        if (isAdmin && repair.createdBy && repair.createdBy !== "Sistem Yöneticisi") {
+        const targetUser = repair.createdBy || "Bilinmiyor";
+        if (isAdmin && targetUser !== "Sistem Yöneticisi" && targetUser !== "Bilinmiyor") {
             kickButtonHtml = `
-                <button onclick="kickUserRemote('${repair.createdBy}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                <button onclick="kickUserRemote('${targetUser}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
                     <i class="fa-solid fa-user-slash"></i> Kick
                 </button>
             `;
@@ -214,7 +218,7 @@ function renderRepairs() {
 
         li.innerHTML = `
             <div class="repair-info">
-                <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #7f8c8d;">(${repair.createdBy || 'Bilinmiyor'})</small>
+                <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #7f8c8d;">(${targetUser})</small>
                 <p>${repair.desc}</p>
             </div>
             <div class="repair-action" style="display: flex; gap: 8px; align-items: center;">
@@ -274,7 +278,7 @@ function takeLaundryRow() {
     const id = Date.now().toString();
     const newLaundry = {
         id: id,
-        name: currentUser, 
+        name: currentUser || "Bilinmiyor", 
         machine: machine,
         time: selectedTime,
         status: "waiting"
@@ -303,7 +307,8 @@ function renderLaundry() {
         let buttonText = "";
         let isButtonDisabled = false;
 
-        const isOwner = (item.name === currentUser);
+        const userName = item.name || "Bilinmiyor";
+        const isOwner = (userName === currentUser);
         const hasAccess = (isOwner || isAdmin);
 
         if (item.status === "waiting") {
@@ -342,15 +347,88 @@ function renderLaundry() {
             `;
         }
 
-        // ÇAMAŞIR PANELİNDEKİ ADMİNE ÖZEL KICK BUTONU
         let kickButtonHtml = "";
-        if (isAdmin && item.name !== "Sistem Yöneticisi") {
+        if (isAdmin && userName !== "Sistem Yöneticisi" && userName !== "Bilinmiyor") {
             kickButtonHtml = `
-                <button onclick="kickUserRemote('${item.name}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-left: 6px; font-size: 11px;">
+                <button onclick="kickUserRemote('${userName}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-left: 6px; font-size: 11px;">
                     <i class="fa-solid fa-user-slash"></i> Kick
                 </button>
             `;
         }
 
         tr.innerHTML = `
-            <td>${item.name} ${isOwner ? '<b style="color:#2ecc71;">(
+            <td>${userName} ${isOwner ? '<b style="color:#2ecc71;">(Sen)</b>' : ''} ${kickButtonHtml}</td>
+            <td>${item.machine}</td>
+            <td>${item.time}</td>
+            <td>${statusHtml}</td>
+            <td>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    ${actionButtonHtml}
+                    ${deleteButtonHtml}
+                </div>
+            </td>
+        `;
+        laundryRows.appendChild(tr);
+    });
+}
+
+function advanceLaundryStatus(id) {
+    const item = globalLaundryList.find(l => l.id == id);
+    if (item) {
+        if (item.name !== currentUser && !isAdmin) {
+            alert("Bu çamaşır sırası size ait değil!");
+            return;
+        }
+
+        let nextStatus = item.status;
+        if (item.status === "waiting") {
+            const isBusy = globalLaundryList.some(l => l.machine === item.machine && l.status === "washing");
+            if (!isBusy) nextStatus = "washing";
+        } else if (item.status === "washing") {
+            nextStatus = "done";
+        }
+
+        database.ref('laundry/' + id).update({ status: nextStatus });
+    }
+}
+
+function deleteLaundryRow(id) {
+    const item = globalLaundryList.find(l => l.id == id);
+    if (item && item.name !== currentUser && !isAdmin) {
+        alert("Başkasına ait çamaşır sırasını silemezsiniz!");
+        return;
+    }
+
+    if (confirm("Bu çamaşır sırasını tamamen silmek istediğinize emin misiniz?")) {
+        database.ref('laundry/' + id).remove();
+    }
+}
+
+/* ==========================================================================
+   4. MODÜL: YEMEK MENÜSÜ YILDIZ PUANLAMA
+   ========================================================================== */
+function setupStars() {
+    const stars = document.querySelectorAll(".stars i");
+    
+    database.ref('foodRating').on('value', (snapshot) => {
+        const liveRating = snapshot.val();
+        if (liveRating) updateStars(liveRating);
+    });
+    
+    stars.forEach(star => {
+        star.addEventListener("click", () => {
+            const currentRating = star.getAttribute("data-value");
+            database.ref('foodRating').set(currentRating);
+        });
+    });
+
+    function updateStars(rating) {
+        stars.forEach(s => {
+            if (parseInt(s.getAttribute("data-value")) <= parseInt(rating)) {
+                s.className = "fa-solid fa-star active";
+            } else {
+                s.className = "fa-regular fa-star";
+            }
+        });
+    }
+}
