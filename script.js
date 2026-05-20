@@ -16,7 +16,7 @@ const database = firebase.database();
 
 // Global Kullanıcı Değişkenleri
 let currentUser = "";
-let isAdmin = false; // Adminlik durumunu tutan değişken
+let isAdmin = false; 
 
 // Sayfa ilk yüklendiğinde çalışacak tetikleyiciler
 document.addEventListener("DOMContentLoaded", () => {
@@ -25,6 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
     setupStars();
     loadRepairs();
     loadLaundry();
+
+    // SADECE SAYI GİRİŞİNE İZİN VEREN KONTROL:
+    const roomInput = document.getElementById("repair-room");
+    if (roomInput) {
+        roomInput.addEventListener("input", (e) => {
+            // Sayı dışındaki (0-9 arası olmayan) tüm karakterleri anında temizler
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    }
 });
 
 /* ==========================================================================
@@ -48,9 +57,9 @@ function checkUserIdentity() {
         isAdmin = false;
     }
     
-    localStorage.setItem("yurt_user_name", savedUser); // Orijinal girdiyi sakla
+    localStorage.setItem("yurt_user_name", savedUser); 
     
-    // Çamaşır sıra girişindeki isim kutusunu ayarla
+    // Çamaşır sıra girişindeki isim kutusunu otomatik doldur ve kilitle
     const nameInput = document.getElementById("laundry-name");
     if (nameInput) {
         nameInput.value = currentUser;
@@ -97,6 +106,11 @@ function submitRepairReport() {
         return;
     }
 
+    if (isNaN(room)) {
+        alert("Oda numarası sadece sayılardan oluşmalıdır!");
+        return;
+    }
+
     const id = Date.now().toString();
     const newRepair = {
         id: id,
@@ -131,7 +145,6 @@ function renderRepairs() {
         let badgeClass = "badge-pending";
         let badgeText = "Beklemede";
         
-        // Sahibi OR Admin mi kontrolü
         const hasAccess = (repair.createdBy === currentUser || isAdmin);
 
         let buttonHtml = "";
@@ -245,7 +258,6 @@ function renderLaundry() {
         let buttonText = "";
         let isButtonDisabled = false;
 
-        // Sahibi VEYA Admin mi kontrolü
         const isOwner = (item.name === currentUser);
         const hasAccess = (isOwner || isAdmin);
 
