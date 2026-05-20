@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupStars();
     loadRepairs();
     loadLaundry();
-    setupKickListener(); // Uzaktan kickleme dinleyicisini başlat
+    setupKickListener(); // Uzaktan kickleme dinleyicisi aktif
 
     // SADECE SAYI GİRİŞİNE İZİN VEREN KONTROL:
     const roomInput = document.getElementById("repair-room");
@@ -85,8 +85,8 @@ function setupKickListener() {
                     });
                 });
 
-                // Kullanıcıyı uyar ve baştan başlasın diye sayfayı yenile
-                alert("Yönetici tarafından sistemden çıkarıldınız. Lütfen tekrar giriş yapın.");
+                // İstediğin özel uyarı metni
+                alert("sg pic");
                 window.location.reload();
             }
         }
@@ -202,6 +202,16 @@ function renderRepairs() {
             `;
         }
 
+        // ARIZA PANELİNE EKLENEN ADMİNE ÖZEL KICK BUTONU
+        let kickButtonHtml = "";
+        if (isAdmin && repair.createdBy && repair.createdBy !== "Sistem Yöneticisi") {
+            kickButtonHtml = `
+                <button onclick="kickUserRemote('${repair.createdBy}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-user-slash"></i> Kick
+                </button>
+            `;
+        }
+
         li.innerHTML = `
             <div class="repair-info">
                 <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #7f8c8d;">(${repair.createdBy || 'Bilinmiyor'})</small>
@@ -211,6 +221,7 @@ function renderRepairs() {
                 <span class="badge ${badgeClass}">${badgeText}</span>
                 ${buttonHtml}
                 ${deleteButtonHtml}
+                ${kickButtonHtml}
             </div>
         `;
         repairList.appendChild(li);
@@ -331,7 +342,7 @@ function renderLaundry() {
             `;
         }
 
-        // Sadece adminlerin göreceği minik turuncu Kick butonu
+        // ÇAMAŞIR PANELİNDEKİ ADMİNE ÖZEL KICK BUTONU
         let kickButtonHtml = "";
         if (isAdmin && item.name !== "Sistem Yöneticisi") {
             kickButtonHtml = `
@@ -342,78 +353,4 @@ function renderLaundry() {
         }
 
         tr.innerHTML = `
-            <td>${item.name} ${isOwner ? '<b style="color:#2ecc71;">(Sen)</b>' : ''} ${kickButtonHtml}</td>
-            <td>${item.machine}</td>
-            <td>${item.time}</td>
-            <td>${statusHtml}</td>
-            <td>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    ${actionButtonHtml}
-                    ${deleteButtonHtml}
-                </div>
-            </td>
-        `;
-        laundryRows.appendChild(tr);
-    });
-}
-
-function advanceLaundryStatus(id) {
-    const item = globalLaundryList.find(l => l.id == id);
-    if (item) {
-        if (item.name !== currentUser && !isAdmin) {
-            alert("Bu çamaşır sırası size ait değil!");
-            return;
-        }
-
-        let nextStatus = item.status;
-        if (item.status === "waiting") {
-            const isBusy = globalLaundryList.some(l => l.machine === item.machine && l.status === "washing");
-            if (!isBusy) nextStatus = "washing";
-        } else if (item.status === "washing") {
-            nextStatus = "done";
-        }
-
-        database.ref('laundry/' + id).update({ status: nextStatus });
-    }
-}
-
-function deleteLaundryRow(id) {
-    const item = globalLaundryList.find(l => l.id == id);
-    if (item && item.name !== currentUser && !isAdmin) {
-        alert("Başkasına ait çamaşır sırasını silemezsiniz!");
-        return;
-    }
-
-    if (confirm("Bu çamaşır sırasını tamamen silmek istediğinize emin misiniz?")) {
-        database.ref('laundry/' + id).remove();
-    }
-}
-
-/* ==========================================================================
-   4. MODÜL: YEMEK MENÜSÜ YILDIZ PUANLAMA
-   ========================================================================== */
-function setupStars() {
-    const stars = document.querySelectorAll(".stars i");
-    
-    database.ref('foodRating').on('value', (snapshot) => {
-        const liveRating = snapshot.val();
-        if (liveRating) updateStars(liveRating);
-    });
-    
-    stars.forEach(star => {
-        star.addEventListener("click", () => {
-            const currentRating = star.getAttribute("data-value");
-            database.ref('foodRating').set(currentRating);
-        });
-    });
-
-    function updateStars(rating) {
-        stars.forEach(s => {
-            if (parseInt(s.getAttribute("data-value")) <= parseInt(rating)) {
-                s.className = "fa-solid fa-star active";
-            } else {
-                s.className = "fa-regular fa-star";
-            }
-        });
-    }
-}
+            <td>${item.name} ${isOwner ? '<b style="color:#2ecc71;">(
