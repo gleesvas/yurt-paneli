@@ -1,4 +1,4 @@
-// Firebase Ayarların (Sana özel konfigürasyon)
+// Firebase Ayarların
 const firebaseConfig = {
   apiKey: "AIzaSyDQqjQ14nDWzbCzC7abJDOVIxYWbp9qosI",
   authDomain: "yurt-paneli.firebaseapp.com",
@@ -14,13 +14,40 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+// Global Kullanıcı Adı Hafızası
+let currentUser = "";
+
 // Sayfa ilk yüklendiğinde çalışacak tetikleyiciler
 document.addEventListener("DOMContentLoaded", () => {
+    checkUserIdentity(); // Önce kullanıcının kim olduğunu kontrol et
     checkSilentHour();
     setupStars();
     loadRepairs();
     loadLaundry();
 });
+
+/* ==========================================================================
+   KİMLİK KONTROL MODÜLÜ (Yeni)
+   ========================================================================== */
+function checkUserIdentity() {
+    // Tarayıcı hafızasında isim var mı bak
+    let savedUser = localStorage.getItem("yurt_user_name");
+    
+    // Eğer yoksa, bir kereliğine isim sor ve kaydet
+    while (!savedUser || savedUser.trim() === "") {
+        savedUser = prompt("Lütfen sistemde kullanmak için Adınızı ve Soyadınızı giriniz:\n(Başkalarının sırasına müdahale edememeniz için önemlidir)");
+    }
+    
+    currentUser = savedUser.trim();
+    localStorage.setItem("yurt_user_name", currentUser);
+    
+    // Çamaşır sıra girişindeki isim kutusunu otomatik doldur ve kilitle (Kullanıcı sürekli ad yazmak zorunda kalmasın)
+    const nameInput = document.getElementById("laundry-name");
+    if (nameInput) {
+        nameInput.value = currentUser;
+        nameInput.disabled = true; // İsmini değiştiremesin
+    }
+}
 
 /* ==========================================================================
    1. MODÜL: SESSİZ SAAT BİLDİRİMİ
@@ -51,13 +78,11 @@ function submitRepairReport() {
     const category = categorySelect.value;
     const desc = descInput.value.trim();
 
-    // Boşluk Kontrolü
     if (room === "" || desc === "") {
         alert("Lütfen Oda Numarası ve Arıza Açıklaması alanlarını boş bırakmayınız!");
         return;
     }
 
-    // Oda Numarası Karakter Sınırı Kontrolü (Max 4 karakter)
     if (room.length > 4) {
         alert("Oda numarası en fazla 4 karakter olabilir!");
         return;
@@ -69,10 +94,10 @@ function submitRepairReport() {
         room: room,
         category: category,
         desc: desc,
-        status: "pending"
+        status: "pending",
+        createdBy: currentUser // Arızayı kimin bildirdiğini kaydediyoruz
     };
 
-    // Firebase'e Gönder
     database.ref('repairs/' + id).set(newRepair);
 
     roomInput.value = "";
@@ -81,7 +106,6 @@ function submitRepairReport() {
 
 let globalRepairsList = [];
 function loadRepairs() {
-    // Veritabanını anlık dinle
     database.ref('repairs').on('value', (snapshot) => {
         const data = snapshot.val();
         globalRepairsList = data ? Object.values(data).reverse() : [];
@@ -97,29 +121,41 @@ function renderRepairs() {
         const li = document.createElement("li");
         let badgeClass = "badge-pending";
         let badgeText = "Beklemede";
-        let buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Durumu İlerlet</button>`;
+        
+        // Sadece kaydı açan kişi butonları görebilsin kontrolü
+        const isOwner = (repair.createdBy === currentUser);
 
-        if (repair.status === "process") {
+        let buttonHtml = "";
+        if (repair.status === "pending") {
+            if (isOwner) buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Onarıma Al</button>`;
+        } else if (repair.status === "process") {
             badgeClass = "badge-process";
             badgeText = "Onarımda";
+            if (isOwner) buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Çözüldü Yap</button>`;
         } else if (repair.status === "solved") {
             badgeClass = "badge-solved";
             badgeText = "Çözüldü";
-            buttonHtml = ""; 
         }
 
-        // Listeye kırmızı çöp kutusu butonu eklendi
+        // Eğer sahibi değilse çöp kutusu butonunu gizle veya gösterme
+        let deleteButtonHtml = "";
+        if (isOwner) {
+            deleteButtonHtml = `
+                <button class="btn-delete-repair" onclick="deleteRepairReport('${repair.id}')" title="Bildirimi Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+        }
+
         li.innerHTML = `
             <div class="repair-info">
-                <strong>Oda ${repair.room} - ${repair.category}</strong>
+                <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #7f8c8d;">(${repair.createdBy || 'Bilinmiyor'})</small>
                 <p>${repair.desc}</p>
             </div>
             <div class="repair-action" style="display: flex; gap: 8px; align-items: center;">
                 <span class="badge ${badgeClass}">${badgeText}</span>
                 ${buttonHtml}
-                <button class="btn-delete-repair" onclick="deleteRepairReport('${repair.id}')" title="Bildirimi Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
+                ${deleteButtonHtml}
             </div>
         `;
         repairList.appendChild(li);
@@ -129,6 +165,11 @@ function renderRepairs() {
 function advanceRepairStatus(id) {
     const repair = globalRepairsList.find(r => r.id == id);
     if (repair) {
+        if (repair.createdBy !== currentUser) {
+            alert("Bu arıza bildirimi size ait olmadığı için müdahale edemezsiniz!");
+            return;
+        }
+        
         let nextStatus = repair.status;
         if (repair.status === "pending") nextStatus = "process";
         else if (repair.status === "process") nextStatus = "solved";
@@ -137,16 +178,15 @@ function advanceRepairStatus(id) {
     }
 }
 
-// Arıza Bildirimini Firebase'den Silen Fonksiyon
 function deleteRepairReport(id) {
+    const repair = globalRepairsList.find(r => r.id == id);
+    if (repair && repair.createdBy !== currentUser) {
+        alert("Bu bildirimi silme yetkiniz yok!");
+        return;
+    }
+
     if (confirm("Bu arıza bildirimini tamamen silmek istediğinize emin misiniz?")) {
-        database.ref('repairs/' + id).remove()
-            .then(() => {
-                console.log("Arıza bildirimi başarıyla silindi.");
-            })
-            .catch((error) => {
-                alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
-            });
+        database.ref('repairs/' + id).remove();
     }
 }
 
@@ -154,37 +194,32 @@ function deleteRepairReport(id) {
    3. MODÜL: AKILLI ÇAMAŞIR REZERVASYON SİSTEMİ
    ========================================================================== */
 function takeLaundryRow() {
-    const studentNameInput = document.getElementById("laundry-name");
     const machineSelect = document.getElementById("machine-select");
     const laundryTimeInput = document.getElementById("laundry-time");
 
-    const name = studentNameInput.value.trim();
     const machine = machineSelect.value;
     const selectedTime = laundryTimeInput.value;
 
-    if (name === "" || selectedTime === "") {
-        alert("Lütfen adınızı yazın ve çamaşır atacağınız saati seçin!");
+    if (selectedTime === "") {
+        alert("Lütfen çamaşır atacağınız saati seçin!");
         return;
     }
 
     const id = Date.now().toString();
     const newLaundry = {
         id: id,
-        name: name,
+        name: currentUser, // Artık adı sistemden otomatik alıyor
         machine: machine,
         time: selectedTime,
         status: "waiting"
     };
 
     database.ref('laundry/' + id).set(newLaundry);
-    
-    studentNameInput.value = "";
     laundryTimeInput.value = "";
 }
 
 let globalLaundryList = [];
 function loadLaundry() {
-    // Veritabanını anlık dinle
     database.ref('laundry').on('value', (snapshot) => {
         const data = snapshot.val();
         globalLaundryList = data ? Object.values(data) : [];
@@ -202,6 +237,9 @@ function renderLaundry() {
         let buttonText = "";
         let isButtonDisabled = false;
 
+        // Sahibi mi kontrolü
+        const isOwner = (item.name === currentUser);
+
         if (item.status === "waiting") {
             statusHtml = `<span class="status-badge waiting">Bekliyor</span>`;
             buttonText = "Yıkamayı Başlat"; 
@@ -216,22 +254,39 @@ function renderLaundry() {
             isButtonDisabled = true; 
         }
 
-        // Tabloya kırmızı çöp kutusu silme butonu eklendi
+        // Eğer sahibi değilse işlem butonunu pasif veya gizli yap
+        let actionButtonHtml = "";
+        if (isOwner) {
+            actionButtonHtml = `
+                <button class="btn-done ${isButtonDisabled ? 'disabled' : ''}" 
+                        onclick="advanceLaundryStatus('${item.id}')" 
+                        ${isButtonDisabled ? 'disabled' : ''}>
+                    ${buttonText}
+                </button>
+            `;
+        } else {
+            actionButtonHtml = `<small style="color: #95a5a6;">Müdahale Edilemez</small>`;
+        }
+
+        // Sahibi değilse silme butonunu gösterme
+        let deleteButtonHtml = "";
+        if (isOwner) {
+            deleteButtonHtml = `
+                <button class="btn-delete" onclick="deleteLaundryRow('${item.id}')" title="Sırayı Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+        }
+
         tr.innerHTML = `
-            <td>${item.name}</td>
+            <td>${item.name} ${isOwner ? '<b style="color:#2ecc71;">(Sen)</b>' : ''}</td>
             <td>${item.machine}</td>
             <td>${item.time}</td>
             <td>${statusHtml}</td>
             <td>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="btn-done ${isButtonDisabled ? 'disabled' : ''}" 
-                            onclick="advanceLaundryStatus('${item.id}')" 
-                            ${isButtonDisabled ? 'disabled' : ''}>
-                        ${buttonText}
-                    </button>
-                    <button class="btn-delete" onclick="deleteLaundryRow('${item.id}')" title="Sırayı Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    ${actionButtonHtml}
+                    ${deleteButtonHtml}
                 </div>
             </td>
         `;
@@ -242,6 +297,11 @@ function renderLaundry() {
 function advanceLaundryStatus(id) {
     const item = globalLaundryList.find(l => l.id == id);
     if (item) {
+        if (item.name !== currentUser) {
+            alert("Bu çamaşır sırası size ait değil!");
+            return;
+        }
+
         let nextStatus = item.status;
         if (item.status === "waiting") {
             const isBusy = globalLaundryList.some(l => l.machine === item.machine && l.status === "washing");
@@ -254,16 +314,15 @@ function advanceLaundryStatus(id) {
     }
 }
 
-// Çamaşır Sırasını Firebase'den Silen Fonksiyon
 function deleteLaundryRow(id) {
+    const item = globalLaundryList.find(l => l.id == id);
+    if (item && item.name !== currentUser) {
+        alert("Başkasına ait çamaşır sırasını silemezsiniz!");
+        return;
+    }
+
     if (confirm("Bu çamaşır sırasını tamamen silmek istediğinize emin misiniz?")) {
-        database.ref('laundry/' + id).remove()
-            .then(() => {
-                console.log("Sıra başarıyla silindi.");
-            })
-            .catch((error) => {
-                alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
-            });
+        database.ref('laundry/' + id).remove();
     }
 }
 
@@ -273,7 +332,6 @@ function deleteLaundryRow(id) {
 function setupStars() {
     const stars = document.querySelectorAll(".stars i");
     
-    // Veritabanındaki güncel genel puan durumunu dinle
     database.ref('foodRating').on('value', (snapshot) => {
         const liveRating = snapshot.val();
         if (liveRating) updateStars(liveRating);
