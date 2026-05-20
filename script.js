@@ -14,12 +14,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// Global Kullanıcı Adı Hafızası
+// Global Kullanıcı Değişkenleri
 let currentUser = "";
+let isAdmin = false; // Adminlik durumunu tutan değişken
 
 // Sayfa ilk yüklendiğinde çalışacak tetikleyiciler
 document.addEventListener("DOMContentLoaded", () => {
-    checkUserIdentity(); // Önce kullanıcının kim olduğunu kontrol et
+    checkUserIdentity(); 
     checkSilentHour();
     setupStars();
     loadRepairs();
@@ -27,25 +28,33 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ==========================================================================
-   KİMLİK KONTROL MODÜLÜ (Yeni)
+   KİMLİK KONTROL MODÜLÜ (Admin Destekli)
    ========================================================================== */
 function checkUserIdentity() {
-    // Tarayıcı hafızasında isim var mı bak
     let savedUser = localStorage.getItem("yurt_user_name");
     
-    // Eğer yoksa, bir kereliğine isim sor ve kaydet
     while (!savedUser || savedUser.trim() === "") {
-        savedUser = prompt("Lütfen sistemde kullanmak için Adınızı ve Soyadınızı giriniz:\n(Başkalarının sırasına müdahale edememeniz için önemlidir)");
+        savedUser = prompt("Lütfen sistemde kullanmak için Adınızı ve Soyadınızı giriniz:\n(Yöneticiyseniz gizli admin kodunu giriniz)");
     }
     
-    currentUser = savedUser.trim();
-    localStorage.setItem("yurt_user_name", currentUser);
+    savedUser = savedUser.trim();
+
+    // GİZLİ ADMİN KONTROLÜ: Eğer girilen yazı "admin123" ise
+    if (savedUser === "admin123") {
+        currentUser = "Sistem Yöneticisi";
+        isAdmin = true;
+    } else {
+        currentUser = savedUser;
+        isAdmin = false;
+    }
     
-    // Çamaşır sıra girişindeki isim kutusunu otomatik doldur ve kilitle (Kullanıcı sürekli ad yazmak zorunda kalmasın)
+    localStorage.setItem("yurt_user_name", savedUser); // Orijinal girdiyi sakla
+    
+    // Çamaşır sıra girişindeki isim kutusunu ayarla
     const nameInput = document.getElementById("laundry-name");
     if (nameInput) {
         nameInput.value = currentUser;
-        nameInput.disabled = true; // İsmini değiştiremesin
+        nameInput.disabled = true; 
     }
 }
 
@@ -95,7 +104,7 @@ function submitRepairReport() {
         category: category,
         desc: desc,
         status: "pending",
-        createdBy: currentUser // Arızayı kimin bildirdiğini kaydediyoruz
+        createdBy: currentUser
     };
 
     database.ref('repairs/' + id).set(newRepair);
@@ -122,24 +131,23 @@ function renderRepairs() {
         let badgeClass = "badge-pending";
         let badgeText = "Beklemede";
         
-        // Sadece kaydı açan kişi butonları görebilsin kontrolü
-        const isOwner = (repair.createdBy === currentUser);
+        // Sahibi OR Admin mi kontrolü
+        const hasAccess = (repair.createdBy === currentUser || isAdmin);
 
         let buttonHtml = "";
         if (repair.status === "pending") {
-            if (isOwner) buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Onarıma Al</button>`;
+            if (hasAccess) buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Onarıma Al</button>`;
         } else if (repair.status === "process") {
             badgeClass = "badge-process";
             badgeText = "Onarımda";
-            if (isOwner) buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Çözüldü Yap</button>`;
+            if (hasAccess) buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Çözüldü Yap</button>`;
         } else if (repair.status === "solved") {
             badgeClass = "badge-solved";
             badgeText = "Çözüldü";
         }
 
-        // Eğer sahibi değilse çöp kutusu butonunu gizle veya gösterme
         let deleteButtonHtml = "";
-        if (isOwner) {
+        if (hasAccess) {
             deleteButtonHtml = `
                 <button class="btn-delete-repair" onclick="deleteRepairReport('${repair.id}')" title="Bildirimi Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
                     <i class="fa-solid fa-trash"></i>
@@ -165,8 +173,8 @@ function renderRepairs() {
 function advanceRepairStatus(id) {
     const repair = globalRepairsList.find(r => r.id == id);
     if (repair) {
-        if (repair.createdBy !== currentUser) {
-            alert("Bu arıza bildirimi size ait olmadığı için müdahale edemezsiniz!");
+        if (repair.createdBy !== currentUser && !isAdmin) {
+            alert("Bu işleme yetkiniz yok!");
             return;
         }
         
@@ -180,7 +188,7 @@ function advanceRepairStatus(id) {
 
 function deleteRepairReport(id) {
     const repair = globalRepairsList.find(r => r.id == id);
-    if (repair && repair.createdBy !== currentUser) {
+    if (repair && repair.createdBy !== currentUser && !isAdmin) {
         alert("Bu bildirimi silme yetkiniz yok!");
         return;
     }
@@ -208,7 +216,7 @@ function takeLaundryRow() {
     const id = Date.now().toString();
     const newLaundry = {
         id: id,
-        name: currentUser, // Artık adı sistemden otomatik alıyor
+        name: currentUser, 
         machine: machine,
         time: selectedTime,
         status: "waiting"
@@ -237,8 +245,9 @@ function renderLaundry() {
         let buttonText = "";
         let isButtonDisabled = false;
 
-        // Sahibi mi kontrolü
+        // Sahibi VEYA Admin mi kontrolü
         const isOwner = (item.name === currentUser);
+        const hasAccess = (isOwner || isAdmin);
 
         if (item.status === "waiting") {
             statusHtml = `<span class="status-badge waiting">Bekliyor</span>`;
@@ -254,9 +263,8 @@ function renderLaundry() {
             isButtonDisabled = true; 
         }
 
-        // Eğer sahibi değilse işlem butonunu pasif veya gizli yap
         let actionButtonHtml = "";
-        if (isOwner) {
+        if (hasAccess) {
             actionButtonHtml = `
                 <button class="btn-done ${isButtonDisabled ? 'disabled' : ''}" 
                         onclick="advanceLaundryStatus('${item.id}')" 
@@ -268,9 +276,8 @@ function renderLaundry() {
             actionButtonHtml = `<small style="color: #95a5a6;">Müdahale Edilemez</small>`;
         }
 
-        // Sahibi değilse silme butonunu gösterme
         let deleteButtonHtml = "";
-        if (isOwner) {
+        if (hasAccess) {
             deleteButtonHtml = `
                 <button class="btn-delete" onclick="deleteLaundryRow('${item.id}')" title="Sırayı Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
                     <i class="fa-solid fa-trash"></i>
@@ -297,7 +304,7 @@ function renderLaundry() {
 function advanceLaundryStatus(id) {
     const item = globalLaundryList.find(l => l.id == id);
     if (item) {
-        if (item.name !== currentUser) {
+        if (item.name !== currentUser && !isAdmin) {
             alert("Bu çamaşır sırası size ait değil!");
             return;
         }
@@ -316,7 +323,7 @@ function advanceLaundryStatus(id) {
 
 function deleteLaundryRow(id) {
     const item = globalLaundryList.find(l => l.id == id);
-    if (item && item.name !== currentUser) {
+    if (item && item.name !== currentUser && !isAdmin) {
         alert("Başkasına ait çamaşır sırasını silemezsiniz!");
         return;
     }
