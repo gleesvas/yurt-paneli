@@ -1,4 +1,4 @@
-// Firebase Ayarların (Sana özel config entegre edildi)
+// Firebase Ayarların (Sana özel konfigürasyon)
 const firebaseConfig = {
   apiKey: "AIzaSyDQqjQ14nDWzbCzC7abJDOVIxYWbp9qosI",
   authDomain: "yurt-paneli.firebaseapp.com",
@@ -40,7 +40,7 @@ function checkSilentHour() {
 }
 
 /* ==========================================================================
-   2. MODÜL: ARIZA BİLDİRİM SİSTEMİ (Firebase Canlı Sürüm)
+   2. MODÜL: ARIZA BİLDİRİM SİSTEMİ
    ========================================================================== */
 function submitRepairReport() {
     const roomInput = document.getElementById("repair-room");
@@ -51,8 +51,15 @@ function submitRepairReport() {
     const category = categorySelect.value;
     const desc = descInput.value.trim();
 
+    // Boşluk Kontrolü
     if (room === "" || desc === "") {
         alert("Lütfen Oda Numarası ve Arıza Açıklaması alanlarını boş bırakmayınız!");
+        return;
+    }
+
+    // Oda Numarası Karakter Sınırı Kontrolü (Max 4 karakter)
+    if (room.length > 4) {
+        alert("Oda numarası en fazla 4 karakter olabilir!");
         return;
     }
 
@@ -101,7 +108,7 @@ function renderRepairs() {
             buttonHtml = ""; 
         }
 
-        // Arıza listesi elemanına hem durumu ilerletme butonunu hem de kırmızı çöp kutusu butonunu ekliyoruz
+        // Listeye kırmızı çöp kutusu butonu eklendi
         li.innerHTML = `
             <div class="repair-info">
                 <strong>Oda ${repair.room} - ${repair.category}</strong>
@@ -119,34 +126,6 @@ function renderRepairs() {
     });
 }
 
-// FİRREBASE'DEN ARIZA BİLDİRİMİNİ TAMAMEN SİLEN YENİ FONKSİYON:
-function deleteRepairReport(id) {
-    if (confirm("Bu arıza bildirimini tamamen silmek istediğinize emin misiniz?")) {
-        // Firebase'deki o ID'ye ait arıza kaydını temizler
-        database.ref('repairs/' + id).remove()
-            .then(() => {
-                console.log("Arıza bildirimi başarıyla silindi.");
-            })
-            .catch((error) => {
-                alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
-            });
-    }
-}
-
-        li.innerHTML = `
-            <div class="repair-info">
-                <strong>Oda ${repair.room} - ${repair.category}</strong>
-                <p>${repair.desc}</p>
-            </div>
-            <div class="repair-action">
-                <span class="badge ${badgeClass}">${badgeText}</span>
-                ${buttonHtml}
-            </div>
-        `;
-        repairList.appendChild(li);
-    });
-}
-
 function advanceRepairStatus(id) {
     const repair = globalRepairsList.find(r => r.id == id);
     if (repair) {
@@ -158,8 +137,21 @@ function advanceRepairStatus(id) {
     }
 }
 
+// Arıza Bildirimini Firebase'den Silen Fonksiyon
+function deleteRepairReport(id) {
+    if (confirm("Bu arıza bildirimini tamamen silmek istediğinize emin misiniz?")) {
+        database.ref('repairs/' + id).remove()
+            .then(() => {
+                console.log("Arıza bildirimi başarıyla silindi.");
+            })
+            .catch((error) => {
+                alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
+            });
+    }
+}
+
 /* ==========================================================================
-   3. MODÜL: AKILLI ÇAMAŞIR REZERVASYON SİSTEMİ (Firebase Canlı Sürüm)
+   3. MODÜL: AKILLI ÇAMAŞIR REZERVASYON SİSTEMİ
    ========================================================================== */
 function takeLaundryRow() {
     const studentNameInput = document.getElementById("laundry-name");
@@ -224,7 +216,7 @@ function renderLaundry() {
             isButtonDisabled = true; 
         }
 
-        // Tablo satırına hem işlem butonunu hem de kırmızı çöp kutusu butonunu ekliyoruz
+        // Tabloya kırmızı çöp kutusu silme butonu eklendi
         tr.innerHTML = `
             <td>${item.name}</td>
             <td>${item.machine}</td>
@@ -247,20 +239,6 @@ function renderLaundry() {
     });
 }
 
-// FİRREBASE'DEN SIRAYI TAMAMEN SİLEN YENİ FONKSİYON:
-function deleteLaundryRow(id) {
-    if (confirm("Bu çamaşır sırasını tamamen silmek istediğinize emin misiniz?")) {
-        // Firebase'deki o ID'ye ait veriyi tamamen kaldırır
-        database.ref('laundry/' + id).remove()
-            .then(() => {
-                console.log("Sıra başarıyla silindi.");
-            })
-            .catch((error) => {
-                alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
-            });
-    }
-}
-
 function advanceLaundryStatus(id) {
     const item = globalLaundryList.find(l => l.id == id);
     if (item) {
@@ -276,8 +254,21 @@ function advanceLaundryStatus(id) {
     }
 }
 
+// Çamaşır Sırasını Firebase'den Silen Fonksiyon
+function deleteLaundryRow(id) {
+    if (confirm("Bu çamaşır sırasını tamamen silmek istediğinize emin misiniz?")) {
+        database.ref('laundry/' + id).remove()
+            .then(() => {
+                console.log("Sıra başarıyla silindi.");
+            })
+            .catch((error) => {
+                alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
+            });
+    }
+}
+
 /* ==========================================================================
-   4. MODÜL: YEMEK MENÜSÜ YILDIZ PUANLAMA (Firebase Ortak Puan)
+   4. MODÜL: YEMEK MENÜSÜ YILDIZ PUANLAMA
    ========================================================================== */
 function setupStars() {
     const stars = document.querySelectorAll(".stars i");
@@ -291,7 +282,7 @@ function setupStars() {
     stars.forEach(star => {
         star.addEventListener("click", () => {
             const currentRating = star.getAttribute("data-value");
-            database.ref('foodRating').set(currentRating); // Veritabanına kaydet
+            database.ref('foodRating').set(currentRating);
         });
     });
 
