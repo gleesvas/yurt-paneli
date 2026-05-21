@@ -41,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
 function checkUserIdentity() {
     let savedUser = localStorage.getItem("yurt_user_name");
     
-    // Geçerli bir isim girilene kadar döngü çalışır
     while (!savedUser || savedUser.trim() === "") {
         savedUser = prompt("Lütfen sistemde kullanmak için Adınızı ve Soyadınızı giriniz:\n(Yöneticiyseniz gizli admin kodunu giriniz)");
     }
@@ -59,7 +58,6 @@ function checkUserIdentity() {
     
     localStorage.setItem("yurt_user_name", savedUser); 
     
-    // HTML'deki input alanını bulup ismi otomatik doldur ve kilitle
     const nameInput = document.getElementById("laundry-name");
     if (nameInput) {
         nameInput.value = currentUser;
@@ -85,7 +83,7 @@ function checkSilentHour() {
 }
 
 /* ==========================================================================
-   2. MODÜL: ARIZA BİLDİRİM SİSTEMİ (Firebase Canlı Sürüm)
+   2. MODÜL: ARIZA BİLDİRİM SİSTEMİ
    ========================================================================== */
 function submitRepairReport() {
     const roomInput = document.getElementById("repair-room");
@@ -108,10 +106,9 @@ function submitRepairReport() {
         category: category,
         desc: desc,
         status: "pending",
-        createdBy: currentUser || "Bilinmiyor" // Bildirimi oluşturan kişi eklendi
+        createdBy: currentUser || "Bilinmiyor"
     };
 
-    // Firebase'e Gönder
     database.ref('repairs/' + id).set(newRepair);
 
     roomInput.value = "";
@@ -135,15 +132,30 @@ function renderRepairs() {
         const li = document.createElement("li");
         let badgeClass = "badge-pending";
         let badgeText = "Beklemede";
-        let buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Durumu İlerlet</button>`;
+        
+        // YETKİ KONTROLÜ: Admin mi yoksa bu kaydı oluşturan kişi mi?
+        const hasAccess = (repair.createdBy === currentUser || isAdmin);
 
-        if (repair.status === "process") {
+        let buttonHtml = "";
+        if (repair.status === "pending") {
+            if (hasAccess) buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Onarıma Al</button>`;
+        } else if (repair.status === "process") {
             badgeClass = "badge-process";
             badgeText = "Onarımda";
+            if (hasAccess) buttonHtml = `<button class="btn-next-status" onclick="advanceRepairStatus('${repair.id}')">Çözüldü Yap</button>`;
         } else if (repair.status === "solved") {
             badgeClass = "badge-solved";
             badgeText = "Çözüldü";
-            buttonHtml = ""; 
+        }
+
+        // Silme butonu (Sadece sahibi veya admin görebilir)
+        let deleteButtonHtml = "";
+        if (hasAccess) {
+            deleteButtonHtml = `
+                <button onclick="deleteRepairReport('${repair.id}')" title="Bildirimi Sil" style="background-color: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
         }
 
         const creator = repair.createdBy || "Bilinmiyor";
@@ -153,9 +165,10 @@ function renderRepairs() {
                 <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #6b7280;">(${creator})</small>
                 <p>${repair.desc}</p>
             </div>
-            <div class="repair-action">
+            <div class="repair-action" style="display: flex; flex-direction: row; align-items: center; gap: 5px;">
                 <span class="badge ${badgeClass}">${badgeText}</span>
                 ${buttonHtml}
+                ${deleteButtonHtml}
             </div>
         `;
         repairList.appendChild(li);
@@ -165,6 +178,12 @@ function renderRepairs() {
 function advanceRepairStatus(id) {
     const repair = globalRepairsList.find(r => r.id == id);
     if (repair) {
+        // Fonksiyon içi yetki güvenlik barajı
+        if (repair.createdBy !== currentUser && !isAdmin) {
+            alert("Bu işleme yetkiniz yok!");
+            return;
+        }
+
         let nextStatus = repair.status;
         if (repair.status === "pending") nextStatus = "process";
         else if (repair.status === "process") nextStatus = "solved";
@@ -173,8 +192,22 @@ function advanceRepairStatus(id) {
     }
 }
 
+function deleteRepairReport(id) {
+    const repair = globalRepairsList.find(r => r.id == id);
+    if (repair) {
+        if (repair.createdBy !== currentUser && !isAdmin) {
+            alert("Bu bildirimi silme yetkiniz yok!");
+            return;
+        }
+
+        if (confirm("Bu arıza bildirimini tamamen silmek istediğinize emin misiniz?")) {
+            database.ref('repairs/' + id).remove();
+        }
+    }
+}
+
 /* ==========================================================================
-   3. MODÜL: AKILLI ÇAMAŞIR REZERVASYON SİSTEMİ (Firebase Canlı Sürüm)
+   3. MODÜL: AKILLI ÇAMAŞIR REZERVASYON SİSTEMİ
    ========================================================================== */
 function takeLaundryRow() {
     const machineSelect = document.getElementById("machine-select");
@@ -191,7 +224,7 @@ function takeLaundryRow() {
     const id = Date.now().toString();
     const newLaundry = {
         id: id,
-        name: currentUser || "Bilinmiyor", // Giriş yapmış kullanıcının adı zorunlu basılıyor
+        name: currentUser || "Bilinmiyor", 
         machine: machine,
         time: selectedTime,
         status: "waiting"
@@ -220,6 +253,9 @@ function renderLaundry() {
         let buttonText = "";
         let isButtonDisabled = false;
 
+        // YETKİ KONTROLÜ: Admin mi yoksa sıranın sahibi mi?
+        const hasAccess = (item.name === currentUser || isAdmin);
+
         if (item.status === "waiting") {
             statusHtml = `<span class="status-badge waiting">Bekliyor</span>`;
             buttonText = "Yıkamayı Başlat"; 
@@ -234,17 +270,40 @@ function renderLaundry() {
             isButtonDisabled = true; 
         }
 
-        tr.innerHTML = `
-            <td>${item.name}</td>
-            <td>${item.machine}</td>
-            <td>${item.time}</td>
-            <td>${statusHtml}</td>
-            <td>
+        // Durum ilerletme butonu (Yetkisi yoksa kilitli görünür)
+        let actionButtonHtml = "";
+        if (hasAccess) {
+            actionButtonHtml = `
                 <button class="btn-done ${isButtonDisabled ? 'disabled' : ''}" 
                         onclick="advanceLaundryStatus('${item.id}')" 
                         ${isButtonDisabled ? 'disabled' : ''}>
                     ${buttonText}
                 </button>
+            `;
+        } else {
+            actionButtonHtml = `<small style="color: #9ca3af;">Müdahale Edilemez</small>`;
+        }
+
+        // Sıra iptal/silme butonu (Sadece sahibi veya admin görebilir)
+        let deleteButtonHtml = "";
+        if (hasAccess) {
+            deleteButtonHtml = `
+                <button onclick="deleteLaundryRow('${item.id}')" title="Sırayı Sil" style="background-color: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+        }
+
+        tr.innerHTML = `
+            <td>${item.name} ${item.name === currentUser ? '<b style="color:#10b981;">(Sen)</b>' : ''}</td>
+            <td>${item.machine}</td>
+            <td>${item.time}</td>
+            <td>${statusHtml}</td>
+            <td>
+                <div style="display: flex; align-items: center;">
+                    ${actionButtonHtml}
+                    ${deleteButtonHtml}
+                </div>
             </td>
         `;
         laundryRows.appendChild(tr);
@@ -254,6 +313,12 @@ function renderLaundry() {
 function advanceLaundryStatus(id) {
     const item = globalLaundryList.find(l => l.id == id);
     if (item) {
+        // Fonksiyon içi yetki güvenlik barajı
+        if (item.name !== currentUser && !isAdmin) {
+            alert("Bu çamaşır sırası size ait değil!");
+            return;
+        }
+
         let nextStatus = item.status;
         if (item.status === "waiting") {
             const isBusy = globalLaundryList.some(l => l.machine === item.machine && l.status === "washing");
@@ -266,8 +331,22 @@ function advanceLaundryStatus(id) {
     }
 }
 
+function deleteLaundryRow(id) {
+    const item = globalLaundryList.find(l => l.id == id);
+    if (item) {
+        if (item.name !== currentUser && !isAdmin) {
+            alert("Başkasına ait çamaşır sırasını silemezsiniz!");
+            return;
+        }
+
+        if (confirm("Bu çamaşır sırasını tamamen iptal etmek istiyor musunuz?")) {
+            database.ref('laundry/' + id).remove();
+        }
+    }
+}
+
 /* ==========================================================================
-   4. MODÜL: YEMEK MENÜSÜ YILDIZ PUANLAMA (Firebase Ortak Puan)
+   4. MODÜL: YEMEK MENÜSÜ YILDIZ PUANLAMA
    ========================================================================== */
 function setupStars() {
     const stars = document.querySelectorAll(".stars i");
