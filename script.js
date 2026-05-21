@@ -1,4 +1,4 @@
-// Firebase Ayarların (Sana özel config entegre edildi)
+// Firebase Ayarları
 const firebaseConfig = {
   apiKey: "AIzaSyDQqjQ14nDWzbCzC7abJDOVIxYWbp9qosI",
   authDomain: "yurt-paneli.firebaseapp.com",
@@ -14,13 +14,58 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+// Global Kullanıcı Değişkenleri
+let currentUser = "";
+let isAdmin = false; 
+
 // Sayfa ilk yüklendiğinde çalışacak tetikleyiciler
 document.addEventListener("DOMContentLoaded", () => {
+    checkUserIdentity(); // ÖNCE KİMLİK KONTROLÜ YAPILIYOR
     checkSilentHour();
     setupStars();
     loadRepairs();
     loadLaundry();
+
+    // Sadece sayı girişine izin veren regex kontrolü (Oda No İçin)
+    const roomInput = document.getElementById("repair-room");
+    if (roomInput) {
+        roomInput.addEventListener("input", (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    }
 });
+
+/* ==========================================================================
+   KİMLİK KONTROL MODÜLÜ
+   ========================================================================== */
+function checkUserIdentity() {
+    let savedUser = localStorage.getItem("yurt_user_name");
+    
+    // Geçerli bir isim girilene kadar döngü çalışır
+    while (!savedUser || savedUser.trim() === "") {
+        savedUser = prompt("Lütfen sistemde kullanmak için Adınızı ve Soyadınızı giriniz:\n(Yöneticiyseniz gizli admin kodunu giriniz)");
+    }
+    
+    savedUser = savedUser.trim();
+
+    // Yönetici Giriş Kontrolü
+    if (savedUser === "admin123") {
+        currentUser = "Sistem Yöneticisi";
+        isAdmin = true;
+    } else {
+        currentUser = savedUser;
+        isAdmin = false;
+    }
+    
+    localStorage.setItem("yurt_user_name", savedUser); 
+    
+    // HTML'deki input alanını bulup ismi otomatik doldur ve kilitle
+    const nameInput = document.getElementById("laundry-name");
+    if (nameInput) {
+        nameInput.value = currentUser;
+        nameInput.disabled = true; 
+    }
+}
 
 /* ==========================================================================
    1. MODÜL: SESSİZ SAAT BİLDİRİMİ
@@ -62,7 +107,8 @@ function submitRepairReport() {
         room: room,
         category: category,
         desc: desc,
-        status: "pending"
+        status: "pending",
+        createdBy: currentUser || "Bilinmiyor" // Bildirimi oluşturan kişi eklendi
     };
 
     // Firebase'e Gönder
@@ -74,7 +120,6 @@ function submitRepairReport() {
 
 let globalRepairsList = [];
 function loadRepairs() {
-    // Veritabanını anlık dinle
     database.ref('repairs').on('value', (snapshot) => {
         const data = snapshot.val();
         globalRepairsList = data ? Object.values(data).reverse() : [];
@@ -101,9 +146,11 @@ function renderRepairs() {
             buttonHtml = ""; 
         }
 
+        const creator = repair.createdBy || "Bilinmiyor";
+
         li.innerHTML = `
             <div class="repair-info">
-                <strong>Oda ${repair.room} - ${repair.category}</strong>
+                <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #6b7280;">(${creator})</small>
                 <p>${repair.desc}</p>
             </div>
             <div class="repair-action">
@@ -130,37 +177,32 @@ function advanceRepairStatus(id) {
    3. MODÜL: AKILLI ÇAMAŞIR REZERVASYON SİSTEMİ (Firebase Canlı Sürüm)
    ========================================================================== */
 function takeLaundryRow() {
-    const studentNameInput = document.getElementById("laundry-name");
     const machineSelect = document.getElementById("machine-select");
     const laundryTimeInput = document.getElementById("laundry-time");
 
-    const name = studentNameInput.value.trim();
     const machine = machineSelect.value;
     const selectedTime = laundryTimeInput.value;
 
-    if (name === "" || selectedTime === "") {
-        alert("Lütfen adınızı yazın ve çamaşır atacağınız saati seçin!");
+    if (selectedTime === "") {
+        alert("Lütfen çamaşır atacağınız saati seçin!");
         return;
     }
 
     const id = Date.now().toString();
     const newLaundry = {
         id: id,
-        name: name,
+        name: currentUser || "Bilinmiyor", // Giriş yapmış kullanıcının adı zorunlu basılıyor
         machine: machine,
         time: selectedTime,
         status: "waiting"
     };
 
     database.ref('laundry/' + id).set(newLaundry);
-    
-    studentNameInput.value = "";
     laundryTimeInput.value = "";
 }
 
 let globalLaundryList = [];
 function loadLaundry() {
-    // Veritabanını anlık dinle
     database.ref('laundry').on('value', (snapshot) => {
         const data = snapshot.val();
         globalLaundryList = data ? Object.values(data) : [];
@@ -230,7 +272,6 @@ function advanceLaundryStatus(id) {
 function setupStars() {
     const stars = document.querySelectorAll(".stars i");
     
-    // Veritabanındaki güncel genel puan durumunu dinle
     database.ref('foodRating').on('value', (snapshot) => {
         const liveRating = snapshot.val();
         if (liveRating) updateStars(liveRating);
@@ -239,7 +280,7 @@ function setupStars() {
     stars.forEach(star => {
         star.addEventListener("click", () => {
             const currentRating = star.getAttribute("data-value");
-            database.ref('foodRating').set(currentRating); // Veritabanına kaydet
+            database.ref('foodRating').set(currentRating);
         });
     });
 
