@@ -17,7 +17,6 @@ const database = firebase.database();
 // Global Kullanıcı Değişkenleri
 let currentUser = "";
 let isAdmin = false; 
-let userRefKey = ""; // Aktif kullanıcının Firebase'deki benzersiz anahtarı
 
 // Sayfa ilk yüklendiğinde çalışacak tetikleyiciler
 document.addEventListener("DOMContentLoaded", () => {
@@ -26,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupStars();
     loadRepairs();
     loadLaundry();
-    setupKickListener(); 
+    setupKickListener(); // Uzaktan kickleme dinleyicisi aktif
 
     // SADECE SAYI GİRİŞİNE İZİN VEREN KONTROL:
     const roomInput = document.getElementById("repair-room");
@@ -38,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ==========================================================================
-   KİMLİK KONTROL VE SİDEBAR AKTİF KULLANICI / KICK MODÜLÜ
+   KİMLİK KONTROL VE UZAKTAN KICK MODÜLÜ
    ========================================================================== */
 function checkUserIdentity() {
     let savedUser = localStorage.getItem("yurt_user_name");
@@ -52,16 +51,9 @@ function checkUserIdentity() {
     if (savedUser === "admin123") {
         currentUser = "Sistem Yöneticisi";
         isAdmin = true;
-        
-        // Admin Giriş Yaptıysa Sol Menüdeki Paneli Göster ve Kullanıcıları Yükle
-        document.getElementById("sidebar-admin-area").style.display = "block";
-        listenActiveUsers();
     } else {
         currentUser = savedUser;
         isAdmin = false;
-        
-        // Normal kullanıcı giriş yaptığında kendini "Aktif Kullanıcılar" odasına kaydeder
-        registerActiveUser(currentUser);
     }
     
     localStorage.setItem("yurt_user_name", savedUser); 
@@ -73,54 +65,6 @@ function checkUserIdentity() {
     }
 }
 
-// Kullanıcıyı siteye girdiğinde aktif odaya yazan fonksiyon
-function registerActiveUser(username) {
-    const activeUsersRef = database.ref('activeUsers');
-    // Mükerrer kaydı önlemek için önce temizlik yapıp sonra ekliyoruz
-    activeUsersRef.orderByValue().equalTo(username).once('value', (snapshot) => {
-        if (!snapshot.exists()) {
-            const newLogRef = activeUsersRef.push();
-            newLogRef.set(username);
-            userRefKey = newLogRef.key;
-            
-            // Sekme veya tarayıcı kapatılırsa veritabanından ismi otomatik silsin
-            newLogRef.onDisconnect().remove();
-        } else {
-            snapshot.forEach((child) => {
-                userRefKey = child.key;
-            });
-        }
-    });
-}
-
-// Sadece Admin ekranında sol menüyü canlı dolduran fonksiyon
-function listenActiveUsers() {
-    database.ref('activeUsers').on('value', (snapshot) => {
-        const userListUi = document.getElementById("sidebar-user-list");
-        userListUi.innerHTML = "";
-        
-        const data = snapshot.val();
-        if (data) {
-            Object.keys(data).forEach((key) => {
-                const name = data[key];
-                
-                // Admin kendisini listede kickleme butonuyla görmesin
-                if(name !== "Sistem Yöneticisi") {
-                    const li = document.createElement("li");
-                    li.innerHTML = `
-                        <span>${name}</span>
-                        <button class="btn-sidebar-kick" onclick="kickUserRemote('${name}', '${key}')">Kick</button>
-                    `;
-                    userListUi.appendChild(li);
-                }
-            });
-        } else {
-            userListUi.innerHTML = "<li style='color:#7f8c8d; justify-content:center;'>Aktif kullanıcı yok</li>";
-        }
-    });
-}
-
-// Cihazın atılıp atılmadığını Firebase üzerinden anlık dinleyen fonksiyon
 function setupKickListener() {
     database.ref('kickedUsers').on('value', (snapshot) => {
         const kickedList = snapshot.val();
@@ -128,37 +72,29 @@ function setupKickListener() {
             const originalName = localStorage.getItem("yurt_user_name");
             if (Object.values(kickedList).includes(originalName)) {
                 
-                // Hafızayı temizle
                 localStorage.removeItem("yurt_user_name");
                 
-                // Atılan adamın aktif kullanıcı kaydını da sil
-                if (userRefKey) {
-                    database.ref('activeUsers/' + userRefKey).remove();
-                }
-                
-                // Kicked odasındaki kaydı sil (Tekrar girebilsin diye)
                 database.ref('kickedUsers').orderByValue().equalTo(originalName).once('value', (snap) => {
                     snap.forEach((childSnap) => {
                         childSnap.ref.remove();
                     });
                 });
 
-                // ÖZEL METİN UYARISI
-                alert("Sistem yöneticisi sizi attı");
+                alert("Sistem Yöneticisi Sizi Siteden Attı!");
                 window.location.reload();
             }
         }
     });
 }
 
-// Sol menüdeki Kick butonuna basınca çalışacak kod
-function kickUserRemote(targetName, activeKey) {
+function kickUserRemote(targetName) {
+    if (!targetName || targetName === "Bilinmiyor" || targetName === "Sistem Yöneticisi") {
+        alert("Geçersiz veya boş bir kullanıcı adı kicklenemez!");
+        return;
+    }
     if (confirm(`${targetName} isimli kullanıcıyı siteden atmak istediğinize emin misiniz?`)) {
         const id = Date.now().toString();
-        // Kişiyi kara listeye ekle
         database.ref('kickedUsers/' + id).set(targetName);
-        // Aktif odasından temizle
-        database.ref('activeUsers/' + activeKey).remove();
     }
 }
 
@@ -257,21 +193,32 @@ function renderRepairs() {
         let deleteButtonHtml = "";
         if (hasAccess) {
             deleteButtonHtml = `
-                <button class="btn-delete-repair" onclick="deleteRepairReport('${repair.id}')" title="Bildirimi Sil">
+                <button class="btn-delete-repair" onclick="deleteRepairReport('${repair.id}')" title="Bildirimi Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
                     <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+        }
+
+        let kickButtonHtml = "";
+        const targetUser = repair.createdBy || "Bilinmiyor";
+        if (isAdmin && targetUser !== "Sistem Yöneticisi" && targetUser !== "Bilinmiyor") {
+            kickButtonHtml = `
+                <button onclick="kickUserRemote('${targetUser}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-user-slash"></i> Kick
                 </button>
             `;
         }
 
         li.innerHTML = `
             <div class="repair-info">
-                <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #7f8c8d;">(${repair.createdBy || 'Bilinmiyor'})</small>
+                <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #7f8c8d;">(${targetUser})</small>
                 <p>${repair.desc}</p>
             </div>
             <div class="repair-action" style="display: flex; gap: 8px; align-items: center;">
                 <span class="badge ${badgeClass}">${badgeText}</span>
                 ${buttonHtml}
                 ${deleteButtonHtml}
+                ${kickButtonHtml}
             </div>
         `;
         repairList.appendChild(li);
@@ -387,8 +334,18 @@ function renderLaundry() {
         let deleteButtonHtml = "";
         if (hasAccess) {
             deleteButtonHtml = `
-                <button class="btn-delete" onclick="deleteLaundryRow('${item.id}')" title="Sırayı Sil">
+                <button class="btn-delete" onclick="deleteLaundryRow('${item.id}')" title="Sırayı Sil" style="background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
                     <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+        }
+
+        // KICK BUTONU KÜÇÜLTÜLEREK EN SAĞA (İŞLEMLER SÜTUNUNA) ALINDI
+        let kickButtonHtml = "";
+        if (isAdmin && userName !== "Sistem Yöneticisi" && userName !== "Bilinmiyor") {
+            kickButtonHtml = `
+                <button onclick="kickUserRemote('${userName}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                    <i class="fa-solid fa-user-slash"></i> Kick
                 </button>
             `;
         }
@@ -402,6 +359,7 @@ function renderLaundry() {
                 <div style="display: flex; gap: 8px; align-items: center;">
                     ${actionButtonHtml}
                     ${deleteButtonHtml}
+                    ${kickButtonHtml}
                 </div>
             </td>
         `;
