@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,61 +9,71 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <div class="sidebar">
-        <h2><i class="fa-solid fa-hotel"></i> Yurt Paneli</h2>
+    <div id="silent-hour-alert" class="alert-banner">
+        <span id="silent-text">Yükleniyor...</span>
+    </div>
 
-        <div class="info-box">
-            <h3><i class="fa-solid fa-location-dot"></i> Yurt Adresi</h3>
-            <p>Atatürk Mahallesi, Üniversite Caddesi, No: 123, Merkez / Adana</p>
+    <div class="panel-grid">
+        <div class="card">
+            <h2>Arıza Bildirim Formu</h2>
+            <input type="text" id="repair-room" placeholder="Oda Numarası (Sadece Sayı)" maxlength="4">
+            <select id="repair-category">
+                <option value="Elektrik">Elektrik Arızası</option>
+                <option value="Su/Tesisat">Su / Tesisat Arızası</option>
+                <option value="İnternet">İnternet / Altyapı</option>
+                <option value="Mobilya">Mobilya / Ahşap</option>
+            </select>
+            <textarea id="repair-desc" placeholder="Arıza detayını buraya yazınız..." rows="3"></textarea>
+            <button class="btn-block" onclick="submitRepairReport()">Arıza Bildirimi Oluştur</button>
+            
+            <ul class="repair-list" id="repair-list"></ul>
         </div>
 
-        <div class="info-box">
-            <h3><i class="fa-solid fa-phone"></i> İletişim Bilgileri</h3>
-            <p><b>Sabit Hat:</b> 0322 123 45 67<br>
-                <b>Yurt Müdürü:</b> 0532 999 88 77<br>
-                <b>Güvenlik:</b> Dahili 104
+        <div class="card" style="display: flex; flex-direction: column; justify-content: center; text-align: center;">
+            <h2>Günün Yemek Menüsü</h2>
+            <p style="font-size: 18px; font-weight: bold; color: #34495e; margin-bottom: 10px;">
+                Mercimek Çorbası<br>Orman Kebabı<br>Pirinç Pilavı<br>Mevsim Salatası
             </p>
-        </div>
-
-        <div class="info-box">
-            <h3><i class="fa-solid fa-circle-info"></i> Önemli Kurallar</h3>
-            <p>• Giriş saati: 23:00<br>
-                • Çamaşır odası kullanımı ücretsizdir.<br>
-                • Arızaları lütfen hemen bildirin.</p>
-        </div>
-
-        <div class="admin-panel" id="sidebar-admin-area">
-            <h3><i class="fa-solid fa-users-gear"></i> Aktif Kullanıcılar</h3>
-            <ul class="user-list" id="sidebar-user-list">
-            </ul>
+            <div class="stars">
+                <i class="fa-regular fa-star" data-value="1"></i>
+                <i class="fa-regular fa-star" data-value="2"></i>
+                <i class="fa-regular fa-star" data-value="3"></i>
+                <i class="fa-regular fa-star" data-value="4"></i>
+                <i class="fa-regular fa-star" data-value="5"></i>
+            </div>
+            <small style="color: #7f8c8d;">Menüyü oylamak için yıldızlara tıklayın (Canlı Güncellenir)</small>
         </div>
     </div>
 
-    <div class="main-content">
-        <div id="silent-hour-alert" class="alert-banner">
-            <span id="silent-text">Yükleniyor...</span>
+    <div class="card" style="margin-top: 20px;">
+        <h2>Akıllı Çamaşırhane Sıra Alım Sistemi</h2>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <input type="text" id="laundry-name" placeholder="Adınız" disabled style="flex: 1; margin-bottom: 0;">
+            <select id="machine-select" style="flex: 1; margin-bottom: 0;">
+                <option value="Çamaşır Makinesi 1">Çamaşır Makinesi 1</option>
+                <option value="Çamaşır Makinesi 2">Çamaşır Makinesi 2</option>
+                <option value="Kurutma Makinesi">Kurutma Makinesi</option>
+            </select>
+            <input type="time" id="laundry-time" style="flex: 1; margin-bottom: 0;">
+            <button onclick="takeLaundryRow()" style="flex: 1; padding: 10px; background-color: #2ecc71; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Sıra Al</button>
         </div>
 
-        <div class="panel-grid">
-            <div class="card">
-                <h2><i class="fa-solid fa-screwdriver-wrench"></i> Arıza Bildirim Formu</h2>
-                <input type="text" id="repair-room" placeholder="Oda Numarası (Sadece Sayı)" maxlength="4">
-                <select id="repair-category">
-                    <option value="Elektrik">Elektrik Arızası</option>
-                    <option value="Su/Tesisat">Su / Tesisat Arızası</option>
-                    <option value="İnternet">İnternet / Altyapı</option>
-                    <option value="Mobilya">Mobilya / Ahşap</option>
-                </select>
-                <textarea id="repair-desc" placeholder="Arıza detayını buraya yazınız..." rows="3"></textarea>
-                <button class="btn-block" onclick="submitRepairReport()">Arıza Bildirimi Oluştur</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ad Soyad</th>
+                    <th>Makine</th>
+                    <th>Saat</th>
+                    <th>Durum</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody id="laundry-rows"></tbody>
+        </table>
+    </div>
 
-                <ul class="repair-list" id="repair-list"></ul>
-            </div>
-
-            <div class="card" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
-                <h2><i class="fa-solid fa-utensils"></i> Günün Yemek Menüsü</h2>
-                <p style="font-size: 18px; font-weight: bold; color: #34495e; margin-bottom: 10px;">
-                    Mercimek Çorbası<br>Orman Kebabı<br>Pirinç Pilavı
+    <script src="script.js"></script>
+</body>
+</html>
