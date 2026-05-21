@@ -391,3 +391,18 @@ td div {
     align-self: center !important;
     flex-shrink: 0 !important;
 }
+
+/* Çamaşırhane tablosundaki butonların sağa tam hizalanması */
+td:last-child div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important; /* Buton grubunu tablonun en sağına yaslar */
+    gap: 12px !important; /* Butonlar arasındaki boşluğu sabitler */
+    width: 100% !important;
+}
+
+/* Tablonun başlık (th) ve hücre (td) elemanlarında işlem sütununu sağa hizala */
+.laundry-table th:last-child, 
+.laundry-table td:last-child {
+    text-align: right !important;
+}
