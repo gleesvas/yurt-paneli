@@ -1,342 +1,276 @@
-/* Genel Sıfırlama ve Temel Stiller */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
 }
 
-body {
-    background-color: #f3f4f6;
-    color: #1f2937;
-    padding: 10px; /* Mobilde kenarlardan taşmasın diye düşürüldü */
+body { 
+    display: flex; 
+    background-color: #f4f6f9; 
+    min-height: 100vh; 
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
+/* SOL MENÜ (SIDEBAR) STİLLERİ */
+.sidebar { 
+    width: 280px; 
+    background-color: #2c3e50; 
+    color: #ecf0f1; 
+    padding: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 20px; 
+    border-right: 3px solid #34495e; 
 }
 
-/* Üst Bilgilendirme Bannerı */
-.alert-banner {
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    font-weight: 600;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    font-size: 0.9rem; /* Mobilde yazı sığsın diye */
+.sidebar h2 { 
+    font-size: 20px; 
+    text-align: center; 
+    border-bottom: 2px solid #34495e; 
+    padding-bottom: 10px; 
+    color: #3498db; 
 }
 
-.alert-safe {
-    background-color: #d1fae5;
-    color: #065f46;
-    border: 1px solid #10b981;
+.info-box { 
+    background-color: #34495e; 
+    padding: 15px; 
+    border-radius: 8px; 
+    font-size: 13px; 
+    line-height: 1.6; 
 }
 
-.alert-warning {
-    background-color: #fef3c7;
-    color: #92400e;
-    border: 1px solid #f59e0b;
+.info-box h3 { 
+    font-size: 14px; 
+    margin-bottom: 8px; 
+    color: #e74c3c; 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
 }
 
-.main-title {
-    margin-bottom: 20px;
-    font-size: 1.6rem; /* Mobilde daha kibar dursun */
-    color: #111827;
-    border-left: 5px solid #3b82f6;
-    padding-left: 10px;
+/* ADMİN AKTİF KULLANICILAR ALANI */
+.admin-panel { 
+    background-color: #1a252f; 
+    padding: 15px; 
+    border-radius: 8px; 
+    margin-top: auto; 
+    display: none; 
+    border: 1px solid #f39c12; 
 }
 
-/* Grid Panel Yapısı (Mobil Öncelikli) */
-.dashboard-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.admin-panel h3 { 
+    color: #f39c12; 
+    font-size: 14px; 
+    margin-bottom: 10px; 
+    text-align: center; 
 }
 
-/* Masaüstü Ekranlar İçin Düzenlemeler */
-@media (min-width: 768px) {
-    body {
-        padding: 20px;
-    }
-    .main-title {
-        font-size: 2rem;
-    }
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-    .laundry-card {
-        grid-column: span 2;
-    }
+.user-list { 
+    list-style: none; 
+    max-height: 180px; 
+    overflow-y: auto; 
 }
 
-/* Kart Tasarımları */
-.card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 15px; /* Mobilde iç boşluk optimize edildi */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    width: 100%;
+.user-list li { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 6px 8px; 
+    background: #2c3e50; 
+    margin-bottom: 5px; 
+    border-radius: 4px; 
+    font-size: 12px; 
 }
 
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+.btn-sidebar-kick { 
+    background-color: #e74c3c; 
+    color: white; 
+    border: none; 
+    padding: 3px 8px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-size: 11px; 
+    transition: 0.2s; 
 }
 
-.card h2 {
-    font-size: 1.15rem;
-    margin-bottom: 15px;
-    color: #374151;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.btn-sidebar-kick:hover { 
+    background-color: #c0392b; 
 }
 
-/* Form Elemanları Genel Stilleri */
-input, select, textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+/* ANA İÇERİK ALANI */
+.main-content { 
+    flex: 1; 
+    padding: 30px; 
+    overflow-y: auto; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 20px; 
 }
 
-button {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
+.alert-banner { 
+    padding: 15px; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 15px; 
 }
 
-/* Form Focus Efektleri */
-.repair-form input:focus, .repair-form select:focus, .repair-form textarea:focus {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+.alert-warning { 
+    background-color: #ffeaa7; 
+    color: #d63031; 
+    border-left: 5px solid #d63031; 
 }
 
-#btn-repair-submit {
-    background-color: #8b5cf6;
-    color: white;
+.alert-safe { 
+    background-color: #dff9fb; 
+    color: #0984e3; 
+    border-left: 5px solid #0984e3; 
 }
 
-#btn-repair-submit:hover {
-    background-color: #7c3aed;
+.panel-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px; 
 }
 
-/* Çamaşır Formu (Esnek Mobil Yapı) */
-.laundry-form {
-    display: flex;
-    flex-direction: column; /* Mobilde alt alta */
-    gap: 10px;
-    margin-bottom: 20px;
+.card { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
 }
 
-.laundry-form input, .laundry-form select {
-    margin-bottom: 0;
-    width: 100%;
+.card h2 { 
+    margin-bottom: 15px; 
+    color: #2c3e50; 
+    font-size: 18px; 
+    border-bottom: 2px solid #ecf0f1; 
+    padding-bottom: 8px; 
 }
 
-.laundry-form input:focus, .laundry-form select:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+/* FORM ELEMANLARI */
+input, select, textarea { 
+    width: 100%; 
+    padding: 10px; 
+    margin-bottom: 12px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
 }
 
-#btn-laundry-reserve {
-    background-color: #10b981;
-    color: white;
-    width: 100%; /* Mobilde tam genişlik */
-    padding: 12px;
+button.btn-block { 
+    width: 100%; 
+    padding: 12px; 
+    background-color: #3498db; 
+    color: white; 
+    border: none; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer; 
 }
 
-/* Büyük Ekranlarda Çamaşır Formunu Yana Yana Yap */
-@media (min-width: 768px) {
-    .laundry-form {
-        flex-direction: row; /* Yan yana */
-    }
-    #btn-laundry-reserve {
-        width: auto;
-        padding: 10px 20px;
-    }
+button.btn-block:hover { 
+    background-color: #2980b9; 
 }
 
-#btn-laundry-reserve:hover {
-    background-color: #059669;
+/* YILDIZLAR */
+.stars { 
+    display: flex; 
+    gap: 10px; 
+    font-size: 30px; 
+    color: #ccc; 
+    cursor: pointer; 
+    justify-content: center; 
+    margin: 15px 0; 
 }
 
-/* Yemek Puanlama Yıldızları */
-.food-menu {
-    background: #f9fafb;
-    padding: 15px;
-    border-radius: 8px;
-    border-left: 4px solid #f59e0b;
+.stars i.active { 
+    color: #f1c40f; 
 }
 
-.rating-box {
-    margin-top: 15px;
-    display: flex;
-    flex-wrap: wrap; /* Mobilde sığmazsa aşağı kaysın */
-    align-items: center;
-    gap: 10px;
+/* TABLO VE LİSTELER */
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 15px; 
 }
 
-.stars i {
-    font-size: 1.2rem;
-    color: #d1d5db;
-    cursor: pointer;
-    transition: color 0.1s;
+th, td { 
+    padding: 10px; 
+    border: 1px solid #eee; 
+    text-align: left; 
+    font-size: 14px; 
 }
 
-.stars i.active {
-    color: #f59e0b;
+th { 
+    background-color: #f8f9fa; 
 }
 
-/* Arıza Listesi Stilleri */
-.repair-list {
-    list-style: none;
-    margin-top: 15px;
-    max-height: 250px;
-    overflow-y: auto;
+.status-badge { 
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-size: 12px; 
+    font-weight: bold; 
 }
 
-.repair-list li {
-    display: flex;
-    flex-direction: column; /* Mobilde alt alta bilgi/buton */
-    gap: 10px;
-    padding: 12px;
-    background: #f9fafb;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    border: 1px solid #e5e7eb;
+.status-badge.waiting { 
+    background-color: #ffeaa7; 
+    color: #d63031; 
 }
 
-@media (min-width: 480px) {
-    .repair-list li {
-        flex-direction: row; /* Küçük cihaz üstünde yan yana */
-        justify-content: space-between;
-        align-items: center;
-    }
+.status-badge.washing { 
+    background-color: #a29bfe; 
+    color: #6c5ce7; 
 }
 
-.repair-info p {
-    font-size: 0.85rem;
-    color: #6b7280;
-    margin-top: 2px;
+.status-badge.done { 
+    background-color: #55efc4; 
+    color: #00b894; 
 }
 
-.repair-action {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 5px;
+.repair-list { 
+    list-style: none; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    margin-top: 15px; 
 }
 
-@media (min-width: 480px) {
-    .repair-action {
-        flex-direction: column;
-        align-items: flex-end;
-        width: auto;
-    }
+.repair-list li { 
+    background: #f8f9fa; 
+    padding: 12px; 
+    border-radius: 6px; 
+    border-left: 4px solid #3498db; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
 }
 
-.btn-next-status {
-    padding: 6px 10px;
-    font-size: 0.75rem;
-    background-color: #e5e7eb;
-    color: #374151;
-    border-radius: 4px;
-    width: auto;
+.badge { 
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-size: 11px; 
+    font-weight: bold; 
+    color: white; 
 }
 
-.btn-next-status:hover {
-    background-color: #d1d5db;
+.badge-pending { background-color: #e67e22; }
+.badge-process { background-color: #3498db; }
+.badge-solved { background-color: #2ecc71; }
+
+.btn-next-status { 
+    background-color: #2ecc71; 
+    color: white; 
+    border: none; 
+    padding: 5px 10px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-size: 12px; 
 }
 
-/* Badge Stilleri */
-.badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.badge-pending { background-color: #fef3c7; color: #d97706; }
-.badge-process { background-color: #dbeafe; color: #2563eb; }
-.badge-solved { background-color: #d1fae5; color: #059669; }
-
-/* Tablo Taşma Koruması (Mobilde Kaydırılabilir Tablo) */
-.table-responsive {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-top: 10px;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-}
-
-.laundry-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem; /* Mobilde daha okunaklı boyut */
-    min-width: 500px; /* Sıkışmayı önlemek için minimum genişlik kilidi */
-}
-
-.laundry-table th, .laundry-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-    white-space: nowrap; /* Metinlerin kırılıp çirkinleşmesini önler */
-}
-
-.laundry-table th {
-    background-color: #f9fafb;
-    color: #4b5563;
-    font-weight: 600;
-}
-
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: inline-block;
-}
-
-.status-badge.waiting { background-color: #fef3c7; color: #b45309; }
-.status-badge.washing { background-color: #dbeafe; color: #1d4ed8; }
-.status-badge.done { background-color: #d1fae5; color: #047857; }
-
-/* Dinamik İşlem Butonları */
-.btn-done {
-    padding: 6px 10px;
-    font-size: 0.75rem;
-    background-color: #3b82f6;
-    color: white;
-    border-radius: 4px;
-    width: auto;
-    display: inline-block;
-}
-
-.btn-done:hover {
-    background-color: #2563eb;
-}
-
-.btn-done.disabled {
-    background-color: #e5e7eb;
-    color: #9ca3af;
-    cursor: not-allowed;
-    opacity: 0.7;
+.btn-delete, .btn-delete-repair { 
+    background-color: #e74c3c; 
+    color: white; 
+    border: none; 
+    padding: 5px 8px; 
+    border-radius: 4px; 
+    cursor: pointer; 
 }
