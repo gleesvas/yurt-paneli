@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setupStars();
     loadRepairs();
     loadLaundry();
-    setupKickListener(); // Uzaktan kickleme dinleyicisi aktif
 
     // SADECE SAYI GİRİŞİNE İZİN VEREN KONTROL:
     const roomInput = document.getElementById("repair-room");
@@ -37,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ==========================================================================
-   KİMLİK KONTROL VE UZAKTAN KICK MODÜLÜ
+   KİMLİK KONTROL MODÜLÜ
    ========================================================================== */
 function checkUserIdentity() {
     let savedUser = localStorage.getItem("yurt_user_name");
@@ -62,39 +61,6 @@ function checkUserIdentity() {
     if (nameInput) {
         nameInput.value = currentUser;
         nameInput.disabled = true; 
-    }
-}
-
-function setupKickListener() {
-    database.ref('kickedUsers').on('value', (snapshot) => {
-        const kickedList = snapshot.val();
-        if (kickedList) {
-            const originalName = localStorage.getItem("yurt_user_name");
-            if (Object.values(kickedList).includes(originalName)) {
-                
-                localStorage.removeItem("yurt_user_name");
-                
-                database.ref('kickedUsers').orderByValue().equalTo(originalName).once('value', (snap) => {
-                    snap.forEach((childSnap) => {
-                        childSnap.ref.remove();
-                    });
-                });
-
-                alert("Sistem Yöneticisi Sizi Siteden Attı!");
-                window.location.reload();
-            }
-        }
-    });
-}
-
-function kickUserRemote(targetName) {
-    if (!targetName || targetName === "Bilinmiyor" || targetName === "Sistem Yöneticisi") {
-        alert("Geçersiz veya boş bir kullanıcı adı kicklenemez!");
-        return;
-    }
-    if (confirm(`${targetName} isimli kullanıcıyı siteden atmak istediğinize emin misiniz?`)) {
-        const id = Date.now().toString();
-        database.ref('kickedUsers/' + id).set(targetName);
     }
 }
 
@@ -199,26 +165,15 @@ function renderRepairs() {
             `;
         }
 
-        let kickButtonHtml = "";
-        const targetUser = repair.createdBy || "Bilinmiyor";
-        if (isAdmin && targetUser !== "Sistem Yöneticisi" && targetUser !== "Bilinmiyor") {
-            kickButtonHtml = `
-                <button onclick="kickUserRemote('${targetUser}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
-                    <i class="fa-solid fa-user-slash"></i> Kick
-                </button>
-            `;
-        }
-
         li.innerHTML = `
             <div class="repair-info">
-                <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #7f8c8d;">(${targetUser})</small>
+                <strong>Oda ${repair.room} - ${repair.category}</strong> <small style="color: #7f8c8d;">(${repair.createdBy || 'Bilinmiyor'})</small>
                 <p>${repair.desc}</p>
             </div>
             <div class="repair-action" style="display: flex; gap: 8px; align-items: center;">
                 <span class="badge ${badgeClass}">${badgeText}</span>
                 ${buttonHtml}
                 ${deleteButtonHtml}
-                ${kickButtonHtml}
             </div>
         `;
         repairList.appendChild(li);
@@ -340,16 +295,6 @@ function renderLaundry() {
             `;
         }
 
-        // KICK BUTONU KÜÇÜLTÜLEREK EN SAĞA (İŞLEMLER SÜTUNUNA) ALINDI
-        let kickButtonHtml = "";
-        if (isAdmin && userName !== "Sistem Yöneticisi" && userName !== "Bilinmiyor") {
-            kickButtonHtml = `
-                <button onclick="kickUserRemote('${userName}')" title="Kullanıcıyı Siteden At" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
-                    <i class="fa-solid fa-user-slash"></i> Kick
-                </button>
-            `;
-        }
-
         tr.innerHTML = `
             <td>${userName} ${isOwner ? '<b style="color:#2ecc71;">(Sen)</b>' : ''}</td>
             <td>${item.machine}</td>
@@ -359,7 +304,6 @@ function renderLaundry() {
                 <div style="display: flex; gap: 8px; align-items: center;">
                     ${actionButtonHtml}
                     ${deleteButtonHtml}
-                    ${kickButtonHtml}
                 </div>
             </td>
         `;
