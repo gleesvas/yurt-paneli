@@ -3,76 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yurt Yönetim Paneli</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <title>KYK Yurt Yönetim Paneli</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="silent-hour-alert" class="alert-banner">
-        <span id="silent-text">Yükleniyor...</span>
-    </div>
+    <div class="container">
+        <div id="silent-hour-alert" class="alert-banner">
+            <span id="silent-text">Yurt Saat Durumu Yükleniyor...</span>
+        </div>
 
-    <div class="panel-grid">
-        <div class="card">
-            <h2>Arıza Bildirim Formu</h2>
-            <input type="text" id="repair-room" placeholder="Oda Numarası (Sadece Sayı)" maxlength="4">
-            <select id="repair-category">
-                <option value="Elektrik">Elektrik Arızası</option>
-                <option value="Su/Tesisat">Su / Tesisat Arızası</option>
-                <option value="İnternet">İnternet / Altyapı</option>
-                <option value="Mobilya">Mobilya / Ahşap</option>
-            </select>
-            <textarea id="repair-desc" placeholder="Arıza detayını buraya yazınız..." rows="3"></textarea>
-            <button class="btn-block" onclick="submitRepairReport()">Arıza Bildirimi Oluştur</button>
+        <h1 class="main-title">KYK Yurt Dijital Panel</h1>
+
+        <div class="dashboard-grid">
             
-            <ul class="repair-list" id="repair-list"></ul>
-        </div>
-
-        <div class="card" style="display: flex; flex-direction: column; justify-content: center; text-align: center;">
-            <h2>Günün Yemek Menüsü</h2>
-            <p style="font-size: 18px; font-weight: bold; color: #34495e; margin-bottom: 10px;">
-                Mercimek Çorbası<br>Orman Kebabı<br>Pirinç Pilavı<br>Mevsim Salatası
-            </p>
-            <div class="stars">
-                <i class="fa-regular fa-star" data-value="1"></i>
-                <i class="fa-regular fa-star" data-value="2"></i>
-                <i class="fa-regular fa-star" data-value="3"></i>
-                <i class="fa-regular fa-star" data-value="4"></i>
-                <i class="fa-regular fa-star" data-value="5"></i>
+            <div class="card info-card">
+                <h2><i class="fa-solid fa-utensils"></i> Günün Yemek Menüsü</h2>
+                <div class="food-menu">
+                    <p><strong>Akşam Yemeği:</strong> Mercimek Çorbası, Orman Kebabı, Pirinç Pilavı, Triliçe</p>
+                </div>
+                <br><br>
+                <div class="food-menu">
+                    <p><strong>Akşam Yemeği:</strong> Mercimek Çorbası, Orman Kebabı, Pirinç Pilavı, Triliçe</p>
+                </div>
             </div>
-            <small style="color: #7f8c8d;">Menüyü oylamak için yıldızlara tıklayın (Canlı Güncellenir)</small>
+
+            <div class="card repair-card">
+                <h2><i class="fa-solid fa-wrench"></i> Arıza Bildirim Sistemi</h2>
+                <div class="repair-form">
+                    <input type="text" id="repair-room" placeholder="Oda Numarası (Örn: 204)">
+                    <select id="repair-category">
+                        <option value="Elektrik">Elektrik</option>
+                        <option value="Tesisat/Su">Tesisat / Su</option>
+                        <option value="Mobilya">Mobilya</option>
+                        <option value="İnternet">İnternet</option>
+                    </select>
+                    <textarea id="repair-desc" placeholder="Arıza detayını kısaca açıklayınız..."></textarea>
+                    <button id="btn-repair-submit" onclick="submitRepairReport()">Arıza Bildir</button>
+                </div>
+                <ul id="repair-list" class="repair-list">
+                    </ul>
+            </div>
+
+            <div class="card laundry-card">
+                <h2><i class="fa-solid fa-shirt"></i> Akıllı Çamaşır Sıra Sistemi</h2>
+                <div class="laundry-form">
+                    <input type="text" id="laundry-name" placeholder="Adınız Soyadınız">
+                    <select id="machine-select">
+                        <option value="Çamaşır Makinesi 1">Çamaşır Makinesi 1</option>
+                        <option value="Çamaşır Makinesi 2">Çamaşır Makinesi 2</option>
+                        <option value="Çamaşır Makinesi 3">Çamaşır Makinesi 3</option>
+                    </select>
+                    <input type="time" id="laundry-time"> 
+                    <button id="btn-laundry-reserve" onclick="takeLaundryRow()">Sıra Al</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="laundry-table">
+                        <thead>
+                            <tr>
+                                <th>Öğrenci</th>
+                                <th>Makine</th>
+                                <th>Rezervasyon Saati</th>
+                                <th>Durum</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="laundry-rows">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div class="card" style="margin-top: 20px;">
-        <h2>Akıllı Çamaşırhane Sıra Alım Sistemi</h2>
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <input type="text" id="laundry-name" placeholder="Adınız" disabled style="flex: 1; margin-bottom: 0;">
-            <select id="machine-select" style="flex: 1; margin-bottom: 0;">
-                <option value="Çamaşır Makinesi 1">Çamaşır Makinesi 1</option>
-                <option value="Çamaşır Makinesi 2">Çamaşır Makinesi 2</option>
-                <option value="Kurutma Makinesi">Kurutma Makinesi</option>
-            </select>
-            <input type="time" id="laundry-time" style="flex: 1; margin-bottom: 0;">
-            <button onclick="takeLaundryRow()" style="flex: 1; padding: 10px; background-color: #2ecc71; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Sıra Al</button>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Ad Soyad</th>
-                    <th>Makine</th>
-                    <th>Saat</th>
-                    <th>Durum</th>
-                    <th>İşlemler</th>
-                </tr>
-            </thead>
-            <tbody id="laundry-rows"></tbody>
-        </table>
-    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <script src="script.js"></script>
 </body>
