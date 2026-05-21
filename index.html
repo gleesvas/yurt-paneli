@@ -32,14 +32,14 @@
             <div class="card repair-card">
                 <h2><i class="fa-solid fa-wrench"></i> Arıza Bildirim Sistemi</h2>
                 <div class="repair-form">
-                    <input type="text" id="repair-room" placeholder="Oda Numarası (Örn: 204)">
+                    <input type="text" id="repair-room" placeholder="Oda Numarası (Örn: 204)" maxlength="4">
                     <select id="repair-category">
                         <option value="Elektrik">Elektrik</option>
                         <option value="Tesisat/Su">Tesisat / Su</option>
                         <option value="Mobilya">Mobilya</option>
                         <option value="İnternet">İnternet</option>
                     </select>
-                    <textarea id="repair-desc" placeholder="Arıza detayını kısaca açıklayınız..."></textarea>
+                    <textarea id="repair-desc" placeholder="Arıza detayını kısaca açıklayınız..." maxlength="60"></textarea>
                     <button id="btn-repair-submit" onclick="submitRepairReport()">Arıza Bildir</button>
                 </div>
                 <ul id="repair-list" class="repair-list"></ul>
@@ -48,7 +48,7 @@
             <div class="card laundry-card">
                 <h2><i class="fa-solid fa-shirt"></i> Akıllı Çamaşır Sıra Sistemi</h2>
                 <div class="laundry-form">
-                    <input type="text" id="laundry-name" placeholder="Adınız Soyadınız" disabled>
+                    <input type="text" id="laundry-name" placeholder="Adınız Soyadınız" disabled maxlength="20">
                     <select id="machine-select">
                         <option value="Çamaşır Makinesi 1">Çamaşır Makinesi 1</option>
                         <option value="Çamaşır Makinesi 2">Çamaşır Makinesi 2</option>
