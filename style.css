@@ -1,183 +1,342 @@
+/* Genel Sıfırlama ve Temel Stiller */
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    padding: 30px;
-    background-color: #f4f6f9;
+    background-color: #f3f4f6;
+    color: #1f2937;
+    padding: 10px; /* Mobilde kenarlardan taşmasın diye düşürüldü */
 }
 
-/* SESSİZ SAAT BİLDİRİM BANNERI */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Üst Bilgilendirme Bannerı */
 .alert-banner {
-    padding: 15px;
+    padding: 12px;
     border-radius: 8px;
-    margin-bottom: 20px;
-    font-weight: bold;
-    font-size: 15px;
-}
-
-.alert-warning {
-    background-color: #ffeaa7;
-    color: #d63031;
-    border-left: 5px solid #d63031;
+    margin-bottom: 15px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    font-size: 0.9rem; /* Mobilde yazı sığsın diye */
 }
 
 .alert-safe {
-    background-color: #dff9fb;
-    color: #0984e3;
-    border-left: 5px solid #0984e3;
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
 }
 
-/* PANEL GRID */
-.panel-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+.alert-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
 }
 
+.main-title {
+    margin-bottom: 20px;
+    font-size: 1.6rem; /* Mobilde daha kibar dursun */
+    color: #111827;
+    border-left: 5px solid #3b82f6;
+    padding-left: 10px;
+}
+
+/* Grid Panel Yapısı (Mobil Öncelikli) */
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Masaüstü Ekranlar İçin Düzenlemeler */
+@media (min-width: 768px) {
+    body {
+        padding: 20px;
+    }
+    .main-title {
+        font-size: 2rem;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .laundry-card {
+        grid-column: span 2;
+    }
+}
+
+/* Kart Tasarımları */
 .card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 15px; /* Mobilde iç boşluk optimize edildi */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
 .card h2 {
+    font-size: 1.15rem;
     margin-bottom: 15px;
-    color: #2c3e50;
-    font-size: 18px;
-    border-bottom: 2px solid #ecf0f1;
-    padding-bottom: 8px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* FORM ELEMANLARI */
+/* Form Elemanları Genel Stilleri */
 input, select, textarea {
     width: 100%;
     padding: 10px;
     margin-bottom: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-button.btn-block {
+button {
     width: 100%;
     padding: 12px;
-    background-color: #3498db;
-    color: white;
     border: none;
-    border-radius: 4px;
-    font-weight: bold;
+    border-radius: 6px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
-button.btn-block:hover {
-    background-color: #2980b9;
+/* Form Focus Efektleri */
+.repair-form input:focus, .repair-form select:focus, .repair-form textarea:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
 }
 
-/* YILDIZLAR */
-.stars {
+#btn-repair-submit {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+#btn-repair-submit:hover {
+    background-color: #7c3aed;
+}
+
+/* Çamaşır Formu (Esnek Mobil Yapı) */
+.laundry-form {
     display: flex;
+    flex-direction: column; /* Mobilde alt alta */
     gap: 10px;
-    font-size: 30px;
-    color: #ccc;
+    margin-bottom: 20px;
+}
+
+.laundry-form input, .laundry-form select {
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.laundry-form input:focus, .laundry-form select:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+#btn-laundry-reserve {
+    background-color: #10b981;
+    color: white;
+    width: 100%; /* Mobilde tam genişlik */
+    padding: 12px;
+}
+
+/* Büyük Ekranlarda Çamaşır Formunu Yana Yana Yap */
+@media (min-width: 768px) {
+    .laundry-form {
+        flex-direction: row; /* Yan yana */
+    }
+    #btn-laundry-reserve {
+        width: auto;
+        padding: 10px 20px;
+    }
+}
+
+#btn-laundry-reserve:hover {
+    background-color: #059669;
+}
+
+/* Yemek Puanlama Yıldızları */
+.food-menu {
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #f59e0b;
+}
+
+.rating-box {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap; /* Mobilde sığmazsa aşağı kaysın */
+    align-items: center;
+    gap: 10px;
+}
+
+.stars i {
+    font-size: 1.2rem;
+    color: #d1d5db;
     cursor: pointer;
-    justify-content: center;
-    margin: 15px 0;
+    transition: color 0.1s;
 }
 
 .stars i.active {
-    color: #f1c40f;
+    color: #f59e0b;
 }
 
-/* TABLO STİLLERİ */
-table {
+/* Arıza Listesi Stilleri */
+.repair-list {
+    list-style: none;
+    margin-top: 15px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.repair-list li {
+    display: flex;
+    flex-direction: column; /* Mobilde alt alta bilgi/buton */
+    gap: 10px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+@media (min-width: 480px) {
+    .repair-list li {
+        flex-direction: row; /* Küçük cihaz üstünde yan yana */
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.repair-info p {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.repair-action {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 5px;
+}
+
+@media (min-width: 480px) {
+    .repair-action {
+        flex-direction: column;
+        align-items: flex-end;
+        width: auto;
+    }
+}
+
+.btn-next-status {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    background-color: #e5e7eb;
+    color: #374151;
+    border-radius: 4px;
+    width: auto;
+}
+
+.btn-next-status:hover {
+    background-color: #d1d5db;
+}
+
+/* Badge Stilleri */
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-pending { background-color: #fef3c7; color: #d97706; }
+.badge-process { background-color: #dbeafe; color: #2563eb; }
+.badge-solved { background-color: #d1fae5; color: #059669; }
+
+/* Tablo Taşma Koruması (Mobilde Kaydırılabilir Tablo) */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.laundry-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
+    font-size: 0.85rem; /* Mobilde daha okunaklı boyut */
+    min-width: 500px; /* Sıkışmayı önlemek için minimum genişlik kilidi */
 }
 
-th, td {
+.laundry-table th, .laundry-table td {
     padding: 10px;
-    border: 1px solid #eee;
     text-align: left;
-    font-size: 14px;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap; /* Metinlerin kırılıp çirkinleşmesini önler */
 }
 
-th {
-    background-color: #f8f9fa;
+.laundry-table th {
+    background-color: #f9fafb;
+    color: #4b5563;
+    font-weight: 600;
 }
 
 .status-badge {
     padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
 }
 
-.status-badge.waiting {
-    background-color: #ffeaa7;
-    color: #d63031;
-}
+.status-badge.waiting { background-color: #fef3c7; color: #b45309; }
+.status-badge.washing { background-color: #dbeafe; color: #1d4ed8; }
+.status-badge.done { background-color: #d1fae5; color: #047857; }
 
-.status-badge.washing {
-    background-color: #a29bfe;
-    color: #6c5ce7;
-}
-
-.status-badge.done {
-    background-color: #55efc4;
-    color: #00b894;
-}
-
-/* ARIZA LİSTESİ */
-.repair-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.repair-list li {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 6px;
-    border-left: 4px solid #3498db;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: bold;
+/* Dinamik İşlem Butonları */
+.btn-done {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    background-color: #3b82f6;
     color: white;
+    border-radius: 4px;
+    width: auto;
+    display: inline-block;
 }
 
-.badge-pending { background-color: #e67e22; }
-.badge-process { background-color: #3498db; }
-.badge-solved { background-color: #2ecc71; }
-
-.btn-next-status {
-    background-color: #2ecc71;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
+.btn-done:hover {
+    background-color: #2563eb;
 }
 
-.btn-delete, .btn-delete-repair {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 5px 8px;
-    border-radius: 4px;
-    cursor: pointer;
+.btn-done.disabled {
+    background-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
