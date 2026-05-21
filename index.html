@@ -42,14 +42,13 @@
                     <textarea id="repair-desc" placeholder="Arıza detayını kısaca açıklayınız..."></textarea>
                     <button id="btn-repair-submit" onclick="submitRepairReport()">Arıza Bildir</button>
                 </div>
-                <ul id="repair-list" class="repair-list">
-                    </ul>
+                <ul id="repair-list" class="repair-list"></ul>
             </div>
 
             <div class="card laundry-card">
                 <h2><i class="fa-solid fa-shirt"></i> Akıllı Çamaşır Sıra Sistemi</h2>
                 <div class="laundry-form">
-                    <input type="text" id="laundry-name" placeholder="Adınız Soyadınız">
+                    <input type="text" id="laundry-name" placeholder="Adınız Soyadınız" disabled>
                     <select id="machine-select">
                         <option value="Çamaşır Makinesi 1">Çamaşır Makinesi 1</option>
                         <option value="Çamaşır Makinesi 2">Çamaşır Makinesi 2</option>
@@ -70,8 +69,7 @@
                                 <th>İşlem</th>
                             </tr>
                         </thead>
-                        <tbody id="laundry-rows">
-                            </tbody>
+                        <tbody id="laundry-rows"></tbody>
                     </table>
                 </div>
             </div>
