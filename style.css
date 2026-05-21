@@ -9,7 +9,7 @@
 body {
     background-color: #f3f4f6;
     color: #1f2937;
-    padding: 10px;
+    padding: 10px; /* Mobilde kenarlardan taşmasın diye düşürüldü */
 }
 
 .container {
@@ -26,7 +26,7 @@ body {
     font-weight: 600;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    font-size: 0.9rem;
+    font-size: 0.9rem; /* Mobilde yazı sığsın diye */
 }
 
 .alert-safe {
@@ -43,7 +43,7 @@ body {
 
 .main-title {
     margin-bottom: 20px;
-    font-size: 1.6rem;
+    font-size: 1.6rem; /* Mobilde daha kibar dursun */
     color: #111827;
     border-left: 5px solid #3b82f6;
     padding-left: 10px;
@@ -78,7 +78,7 @@ body {
 .card {
     background: #ffffff;
     border-radius: 12px;
-    padding: 15px;
+    padding: 15px; /* Mobilde iç boşluk optimize edildi */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     width: 100%;
@@ -135,10 +135,10 @@ button {
     background-color: #7c3aed;
 }
 
-/* Çamaşır Formu */
+/* Çamaşır Formu (Esnek Mobil Yapı) */
 .laundry-form {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Mobilde alt alta */
     gap: 10px;
     margin-bottom: 20px;
 }
@@ -156,13 +156,14 @@ button {
 #btn-laundry-reserve {
     background-color: #10b981;
     color: white;
-    width: 100%;
+    width: 100%; /* Mobilde tam genişlik */
     padding: 12px;
 }
 
+/* Büyük Ekranlarda Çamaşır Formunu Yana Yana Yap */
 @media (min-width: 768px) {
     .laundry-form {
-        flex-direction: row;
+        flex-direction: row; /* Yan yana */
     }
     #btn-laundry-reserve {
         width: auto;
@@ -185,7 +186,7 @@ button {
 .rating-box {
     margin-top: 15px;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Mobilde sığmazsa aşağı kaysın */
     align-items: center;
     gap: 10px;
 }
@@ -211,7 +212,7 @@ button {
 
 .repair-list li {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Mobilde alt alta bilgi/buton */
     gap: 10px;
     padding: 12px;
     background: #f9fafb;
@@ -222,7 +223,7 @@ button {
 
 @media (min-width: 480px) {
     .repair-list li {
-        flex-direction: row;
+        flex-direction: row; /* Küçük cihaz üstünde yan yana */
         justify-content: space-between;
         align-items: center;
     }
@@ -276,7 +277,7 @@ button {
 .badge-process { background-color: #dbeafe; color: #2563eb; }
 .badge-solved { background-color: #d1fae5; color: #059669; }
 
-/* Tablo Taşma Koruması */
+/* Tablo Taşma Koruması (Mobilde Kaydırılabilir Tablo) */
 .table-responsive {
     width: 100%;
     overflow-x: auto;
@@ -289,15 +290,15 @@ button {
 .laundry-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.85rem;
-    min-width: 500px;
+    font-size: 0.85rem; /* Mobilde daha okunaklı boyut */
+    min-width: 500px; /* Sıkışmayı önlemek için minimum genişlik kilidi */
 }
 
 .laundry-table th, .laundry-table td {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
-    white-space: nowrap;
+    white-space: nowrap; /* Metinlerin kırılıp çirkinleşmesini önler */
 }
 
 .laundry-table th {
@@ -338,4 +339,55 @@ button {
     color: #9ca3af;
     cursor: not-allowed;
     opacity: 0.7;
+}
+
+/* ==========================================================================
+   SİLME VE DURUM İLERLETME BUTONLARI ESNEME ENGELLEME DÜZENLEMESİ
+   ========================================================================== */
+
+/* Silme butonlarının (Çöp Kutusu) her iki panelde de sabit, küçük ve yuvarlak durması için */
+.repair-action button[onclick*="deleteRepairReport"],
+td div button[onclick*="deleteLaundryRow"] {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important; /* Tam yuvarlak yapar */
+    font-size: 0.85rem !important;
+    flex-shrink: 0 !important; /* Hücre daralsa da buton büzüşmez */
+    align-self: center !important; /* Yüksekliğe göre dikey esnemeyi keser */
+}
+
+/* Arıza panelindeki buton konteyner ayarı */
+.repair-action {
+    display: flex !important;
+    align-items: center !important;
+    align-self: center !important;
+}
+
+.repair-action .btn-next-status {
+    width: auto !important;
+    height: auto !important;
+    padding: 6px 12px !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Çamaşırhane tablosundaki buton konteyner ayarı */
+td div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    height: 100% !important;
+}
+
+.btn-done {
+    width: auto !important;
+    padding: 6px 12px !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
 }
